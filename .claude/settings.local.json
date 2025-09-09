@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//private/tmp/**)",
+      "Read(//tmp/ph-child-migration-2/**)",
+      "Read(//tmp/ph-child-migration-2/**)",
+      "Read(//tmp/ph-child-migration-2/**)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/private/tmp/ph-child-migration-2"
+    ]
+  }
+}
