@@ -24,7 +24,7 @@ const Dashboard = () => {
                     }}
                 >
                     <Container.Item
-                        className="p-2 ph_child-65-width"
+                        className="p-2 surefeedback-65-width"
                         alignSelf="auto"
                         order="none"
                         shrink={0}
@@ -34,7 +34,7 @@ const Dashboard = () => {
                          <ExtendWebsite />
                     </Container.Item>
                     <Container.Item
-                        className="p-2 w-full ph_child-35-width"
+                        className="p-2 w-full surefeedback-35-width"
                         shrink={1}
                     >
                         {/* <UltimateFeatures /> */}

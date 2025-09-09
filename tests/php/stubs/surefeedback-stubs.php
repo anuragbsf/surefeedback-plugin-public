@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Main PH_Child Class
+ * Main SureFeedback Class
  * Uses singleton design pattern
  *
  * @since 1.0.0
  */
-final class PH_Child {
+final class SureFeedback {
 
 	/**
 	 * Get things going
@@ -171,26 +171,26 @@ final class PH_Child {
 /**
  * Is the current user allowed to comment?
  */
-function ph_child_is_current_user_allowed_to_comment() { }
+function surefeedback_is_current_user_allowed_to_comment() { }
 /**
  * Dismiss notice action handler
  */
-function ph_child_dismiss_js() { }
+function surefeedback_dismiss_js() { }
 /**
  * Stores notice dismissing in options table
  */
-function ph_child_ajax_notice_handler() { }
+function surefeedback_ajax_notice_handler() { }
 /**
  * Flywheel exclusions notice
  */
-function ph_child_flywheel_exclusions_notice() { }
+function surefeedback_flywheel_exclusions_notice() { }
 // phpcs:disable Squiz.Commenting.InlineComment.InvalidEndChar
-// add_action('admin_notices', 'ph_child_flywheel_exclusions_notice');
+// add_action('admin_notices', 'surefeedback_flywheel_exclusions_notice');
 // phpcs:enable
 /**
  * WPEngine exclusion notice
  */
-function ph_child_wpengine_exclusions_notice() { }
-\define( 'PH_CHILD_PLUGIN_DIR', \plugin_dir_path( __FILE__ ) );
-\define( 'PH_CHILD_PLUGIN_URL', \plugin_dir_url( __FILE__ ) );
-\define( 'PH_CHILD_PLUGIN_FILE', __FILE__ );
+function surefeedback_wpengine_exclusions_notice() { }
+\define( 'SUREFEEDBACK_PLUGIN_DIR', \plugin_dir_path( __FILE__ ) );
+\define( 'SUREFEEDBACK_PLUGIN_URL', \plugin_dir_url( __FILE__ ) );
+\define( 'SUREFEEDBACK_PLUGIN_FILE', __FILE__ );

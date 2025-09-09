@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class PH_Child_REST_API {
+class SureFeedback_REST_API {
 
     /**
 	 * Plugins List
@@ -56,12 +56,12 @@ class PH_Child_REST_API {
 
     public function verify_access($request) {
         $token = $request->get_header('X-SureFeedback-Token');
-        $valid_token = get_option('ph_child_access_token', '');
+        $valid_token = get_option('surefeedback_access_token', '');
         if (empty($token)) {
-            return new WP_Error('rest_forbidden', __('Access token required', 'ph-child'), array('status' => 401));
+            return new WP_Error('rest_forbidden', __('Access token required', 'surefeedback'), array('status' => 401));
         }
         if (!hash_equals($valid_token, $token)) {
-            return new WP_Error('rest_forbidden', __('Invalid access token', 'ph-child'), array('status' => 403));
+            return new WP_Error('rest_forbidden', __('Invalid access token', 'surefeedback'), array('status' => 403));
         }
         return true;
     }
@@ -131,7 +131,7 @@ class PH_Child_REST_API {
 		$plugins_list = get_bsf_plugins_list();
 
 		if ( ! is_array( $plugins_list ) ) {
-			return new WP_REST_Response( [ 'message' => __( 'Plugins list not found', 'ph-child' ) ], 404 );
+			return new WP_REST_Response( [ 'message' => __( 'Plugins list not found', 'surefeedback' ) ], 404 );
 		}
 
 		return new WP_REST_Response( $plugins_list, 200 );
@@ -153,4 +153,4 @@ class PH_Child_REST_API {
 }
 
 // Initialize the REST API
-new PH_Child_REST_API();
+new SureFeedback_REST_API();

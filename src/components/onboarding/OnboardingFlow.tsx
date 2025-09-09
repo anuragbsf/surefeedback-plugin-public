@@ -74,11 +74,11 @@ export default function OnboardingFlow({ onComplete, onSkip, className }: Onboar
         break;
       
       case 2: // Connection setup
-        if (!onboardingData.connectionSettings.ph_child_parent_url) {
+        if (!onboardingData.connectionSettings.surefeedback_parent_url) {
           setErrors({ parent_url: 'Parent URL is required' });
           return false;
         }
-        if (!onboardingData.connectionSettings.ph_child_access_token) {
+        if (!onboardingData.connectionSettings.surefeedback_access_token) {
           setErrors({ access_token: 'Access token is required' });
           return false;
         }

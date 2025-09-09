@@ -18,7 +18,7 @@ const QuickAccess = () => {
 				iconPosition="right"
 				size="xs"
 				tag="h3"
-				title={__("Quick Access", "ph_child")}
+				title={__("Quick Access", "surefeedback")}
 			/>
 
 			<Container
@@ -40,7 +40,7 @@ const QuickAccess = () => {
 					shrink={1}
 				>
 					<Button
-						className="text-black ph_child-remove-ring"
+						className="text-black surefeedback-remove-ring"
 						icon={<Headphones />}
 						iconPosition="left"
 						variant="link"
@@ -51,12 +51,12 @@ const QuickAccess = () => {
 							);
 						}}
 					>
-						{__("VIP Priority Support", "ph_child")}
+						{__("VIP Priority Support", "surefeedback")}
 					</Button>
 					<Badge
 						label={__(
 							"PRO",
-							"ph_child"
+							"surefeedback"
 						)}
 						size="xs"
 						variant="inverse"
@@ -69,7 +69,7 @@ const QuickAccess = () => {
 					shrink={1}
 				>
 					<Button
-						className="text-black ph_child-remove-ring"
+						className="text-black surefeedback-remove-ring"
 						icon={<BookOpenText />}
 						iconPosition="left"
 						variant="link"
@@ -80,12 +80,12 @@ const QuickAccess = () => {
 							);
 						}}
 					>
-						{__("Knowledge Base", "ph_child")}
+						{__("Knowledge Base", "surefeedback")}
 					</Button>
 				</Container.Item>
 				<Container.Item className="p-4 bg-white rounded-lg shadow-container-item">
 					<Button
-						className="text-black ph_child-remove-ring"
+						className="text-black surefeedback-remove-ring"
 						icon={<HelpCircle />}
 						iconPosition="left"
 						variant="link"
@@ -96,12 +96,12 @@ const QuickAccess = () => {
 							);
 						}}
 					>
-						{__("Help Centre", "ph_child")}
+						{__("Help Centre", "surefeedback")}
 					</Button>
 				</Container.Item>
 				<Container.Item className="p-4 bg-white rounded-lg shadow-container-item">
 					<Button
-						className="text-black ph_child-remove-ring"
+						className="text-black surefeedback-remove-ring"
 						icon={<NotepadText />}
 						iconPosition="left"
 						variant="link"
@@ -112,12 +112,12 @@ const QuickAccess = () => {
 							);
 						}}
 					>
-						{__("Request a Feature", "ph_child")}
+						{__("Request a Feature", "surefeedback")}
 					</Button>
 				</Container.Item>
 				{/* <Container.Item className="p-4 bg-white rounded-lg shadow-container-item">
 					<Button
-						className="text-black ph_child-remove-ring"
+						className="text-black surefeedback-remove-ring"
 						icon={<MessagesSquareIcon />}
 						iconPosition="left"
 						variant="link"
@@ -128,7 +128,7 @@ const QuickAccess = () => {
 							);
 						}}
 					>
-						{__("Join the Community", "ph_child")}
+						{__("Join the Community", "surefeedback")}
 					</Button>
 				</Container.Item> */}
 			</Container>

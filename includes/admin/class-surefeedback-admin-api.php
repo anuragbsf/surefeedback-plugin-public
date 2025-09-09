@@ -10,11 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
+if ( ! class_exists( 'SureFeedback_Admin_API' ) ) :
 	/**
 	 * Admin API Class for handling Vue.js frontend requests
 	 */
-	class PH_Child_Admin_API {
+	class SureFeedback_Admin_API {
 		
 		/**
 		 * Constructor
@@ -45,16 +45,16 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 					'callback'            => array( $this, 'save_general_settings' ),
 					'permission_callback' => array( $this, 'check_admin_permissions' ),
 					'args'                => array(
-						'ph_child_role_can_comment' => array(
+						'surefeedback_role_can_comment' => array(
 							'type'              => 'array',
 							'items'             => array( 'type' => 'string' ),
 							'sanitize_callback' => array( $this, 'sanitize_roles' ),
 						),
-						'ph_child_guest_comments_enabled' => array(
+						'surefeedback_guest_comments_enabled' => array(
 							'type'              => 'boolean',
 							'sanitize_callback' => 'rest_sanitize_boolean',
 						),
-						'ph_child_admin' => array(
+						'surefeedback_admin' => array(
 							'type'              => 'boolean',
 							'sanitize_callback' => 'rest_sanitize_boolean',
 						),
@@ -70,23 +70,23 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 					'callback'            => array( $this, 'save_connection_settings' ),
 					'permission_callback' => array( $this, 'check_admin_permissions' ),
 					'args'                => array(
-						'ph_child_id' => array(
+						'surefeedback_id' => array(
 							'type'              => array( 'integer', 'string' ),
 							'sanitize_callback' => array( $this, 'sanitize_project_id' ),
 						),
-						'ph_child_api_key' => array(
+						'surefeedback_api_key' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
-						'ph_child_access_token' => array(
+						'surefeedback_access_token' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
-						'ph_child_parent_url' => array(
+						'surefeedback_parent_url' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'esc_url_raw',
 						),
-						'ph_child_signature' => array(
+						'surefeedback_signature' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
@@ -102,23 +102,23 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 					'callback'            => array( $this, 'save_white_label_settings' ),
 					'permission_callback' => array( $this, 'check_admin_permissions' ),
 					'args'                => array(
-						'ph_child_plugin_name' => array(
+						'surefeedback_plugin_name' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
-						'ph_child_plugin_description' => array(
+						'surefeedback_plugin_description' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_textarea_field',
 						),
-						'ph_child_plugin_author' => array(
+						'surefeedback_plugin_author' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
 						),
-						'ph_child_plugin_author_url' => array(
+						'surefeedback_plugin_author_url' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'esc_url_raw',
 						),
-						'ph_child_plugin_link' => array(
+						'surefeedback_plugin_link' => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'esc_url_raw',
 						),
@@ -208,26 +208,26 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 		 */
 		public function get_settings( $request ) {
 			$general_settings = array(
-				'ph_child_role_can_comment'        => get_option( 'ph_child_role_can_comment', array() ),
-				'ph_child_guest_comments_enabled'  => (bool) get_option( 'ph_child_guest_comments_enabled', false ),
-				'ph_child_admin'                   => (bool) get_option( 'ph_child_admin', false ),
+				'surefeedback_role_can_comment'        => get_option( 'surefeedback_role_can_comment', array() ),
+				'surefeedback_guest_comments_enabled'  => (bool) get_option( 'surefeedback_guest_comments_enabled', false ),
+				'surefeedback_admin'                   => (bool) get_option( 'surefeedback_admin', false ),
 			);
 
 			$connection_settings = array(
-				'ph_child_id'           => get_option( 'ph_child_id', '' ),
-				'ph_child_api_key'      => get_option( 'ph_child_api_key', '' ),
-				'ph_child_access_token' => get_option( 'ph_child_access_token', '' ),
-				'ph_child_parent_url'   => get_option( 'ph_child_parent_url', '' ),
-				'ph_child_signature'    => get_option( 'ph_child_signature', '' ),
-				'ph_child_installed'    => (bool) get_option( 'ph_child_installed', false ),
+				'surefeedback_id'           => get_option( 'surefeedback_id', '' ),
+				'surefeedback_api_key'      => get_option( 'surefeedback_api_key', '' ),
+				'surefeedback_access_token' => get_option( 'surefeedback_access_token', '' ),
+				'surefeedback_parent_url'   => get_option( 'surefeedback_parent_url', '' ),
+				'surefeedback_signature'    => get_option( 'surefeedback_signature', '' ),
+				'surefeedback_installed'    => (bool) get_option( 'surefeedback_installed', false ),
 			);
 
 			$white_label_settings = array(
-				'ph_child_plugin_name'        => get_option( 'ph_child_plugin_name', '' ),
-				'ph_child_plugin_description' => get_option( 'ph_child_plugin_description', '' ),
-				'ph_child_plugin_author'      => get_option( 'ph_child_plugin_author', '' ),
-				'ph_child_plugin_author_url'  => get_option( 'ph_child_plugin_author_url', '' ),
-				'ph_child_plugin_link'        => get_option( 'ph_child_plugin_link', '' ),
+				'surefeedback_plugin_name'        => get_option( 'surefeedback_plugin_name', '' ),
+				'surefeedback_plugin_description' => get_option( 'surefeedback_plugin_description', '' ),
+				'surefeedback_plugin_author'      => get_option( 'surefeedback_plugin_author', '' ),
+				'surefeedback_plugin_author_url'  => get_option( 'surefeedback_plugin_author_url', '' ),
+				'surefeedback_plugin_link'        => get_option( 'surefeedback_plugin_link', '' ),
 			);
 
 			$connection_status = $this->get_connection_status();
@@ -255,18 +255,18 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 
 			$updated = 0;
 
-			if ( isset( $params['ph_child_role_can_comment'] ) ) {
-				update_option( 'ph_child_role_can_comment', $params['ph_child_role_can_comment'] );
+			if ( isset( $params['surefeedback_role_can_comment'] ) ) {
+				update_option( 'surefeedback_role_can_comment', $params['surefeedback_role_can_comment'] );
 				$updated++;
 			}
 
-			if ( isset( $params['ph_child_guest_comments_enabled'] ) ) {
-				update_option( 'ph_child_guest_comments_enabled', $params['ph_child_guest_comments_enabled'] );
+			if ( isset( $params['surefeedback_guest_comments_enabled'] ) ) {
+				update_option( 'surefeedback_guest_comments_enabled', $params['surefeedback_guest_comments_enabled'] );
 				$updated++;
 			}
 
-			if ( isset( $params['ph_child_admin'] ) ) {
-				update_option( 'ph_child_admin', $params['ph_child_admin'] );
+			if ( isset( $params['surefeedback_admin'] ) ) {
+				update_option( 'surefeedback_admin', $params['surefeedback_admin'] );
 				$updated++;
 			}
 
@@ -287,7 +287,7 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 			$updated = 0;
 
 			foreach ( $params as $key => $value ) {
-				if ( strpos( $key, 'ph_child_' ) === 0 ) {
+				if ( strpos( $key, 'surefeedback_' ) === 0 ) {
 					update_option( $key, $value );
 					$updated++;
 				}
@@ -315,7 +315,7 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 			$updated = 0;
 
 			foreach ( $params as $key => $value ) {
-				if ( strpos( $key, 'ph_child_plugin_' ) === 0 ) {
+				if ( strpos( $key, 'surefeedback_plugin_' ) === 0 ) {
 					update_option( $key, $value );
 					$updated++;
 				}
@@ -348,12 +348,12 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 			}
 
 			// Save connection settings
-			update_option( 'ph_child_parent_url', $params['parent_url'] );
-			update_option( 'ph_child_id', intval( $params['project_id'] ) );
-			update_option( 'ph_child_api_key', $params['api_key'] );
-			update_option( 'ph_child_access_token', $params['access_token'] );
-			update_option( 'ph_child_signature', $params['signature'] );
-			update_option( 'ph_child_installed', true );
+			update_option( 'surefeedback_parent_url', $params['parent_url'] );
+			update_option( 'surefeedback_id', intval( $params['project_id'] ) );
+			update_option( 'surefeedback_api_key', $params['api_key'] );
+			update_option( 'surefeedback_access_token', $params['access_token'] );
+			update_option( 'surefeedback_signature', $params['signature'] );
+			update_option( 'surefeedback_installed', true );
 
 			$connection_status = $this->get_connection_status();
 
@@ -416,12 +416,12 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 		 * Get connection status
 		 */
 		private function get_connection_status() {
-			$parent_url    = get_option( 'ph_child_parent_url', '' );
-			$site_id       = get_option( 'ph_child_id', '' );
-			$access_token  = get_option( 'ph_child_access_token', '' );
-			$api_key       = get_option( 'ph_child_api_key', '' );
-			$signature     = get_option( 'ph_child_signature', '' );
-			$is_installed  = (bool) get_option( 'ph_child_installed', false );
+			$parent_url    = get_option( 'surefeedback_parent_url', '' );
+			$site_id       = get_option( 'surefeedback_id', '' );
+			$access_token  = get_option( 'surefeedback_access_token', '' );
+			$api_key       = get_option( 'surefeedback_api_key', '' );
+			$signature     = get_option( 'surefeedback_signature', '' );
+			$is_installed  = (bool) get_option( 'surefeedback_installed', false );
 
 			$is_connected = ! empty( $parent_url ) && ! empty( $site_id ) && ! empty( $access_token );
 
@@ -450,7 +450,7 @@ if ( ! class_exists( 'PH_Child_Admin_API' ) ) :
 			}
 
 			$roles = array();
-			$selected_roles = get_option( 'ph_child_role_can_comment', array() );
+			$selected_roles = get_option( 'surefeedback_role_can_comment', array() );
 
 			foreach ( $wp_roles->roles as $role_key => $role_data ) {
 				$roles[] = array(

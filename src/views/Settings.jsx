@@ -14,19 +14,19 @@ const Settings = () => {
             icon: (
                 <img
                     src={`${sureFeedbackAdmin.settings_url}`}
-                    alt={__("Custom SVG", "ph_child")}
+                    alt={__("Custom SVG", "surefeedback")}
                     className="object-contain"
                 />
             ),
             selected: (
                 <img
                     src={`${sureFeedbackAdmin.settings_selected_url}`}
-                    alt={__("Custom SVG", "ph_child")}
+                    alt={__("Custom SVG", "surefeedback")}
                     className="object-contain"
                 />
             ),
-               main: __("Editor", "ph_child"),
-            title: __("General Settings", "ph_child"),
+               main: __("Editor", "surefeedback"),
+            title: __("General Settings", "surefeedback"),
             content: <GeneralSettings />,
         },
         {
@@ -34,18 +34,18 @@ const Settings = () => {
             icon: (
                 <img
                     src={`${sureFeedbackAdmin.label_url}`}
-                    alt={__("Custom SVG", "ph_child")}
+                    alt={__("Custom SVG", "surefeedback")}
                     className="object-contain"
                 />
             ),
             selected: (
                 <img
                     src={`${sureFeedbackAdmin.label_selected_url}`}
-                    alt={__("Custom SVG", "ph_child")}
+                    alt={__("Custom SVG", "surefeedback")}
                     className="object-contain"
                 />
             ),
-            title: __("White Label", "ph_child"),
+            title: __("White Label", "surefeedback"),
             content: <WhiteLabel />,
         },
   	]
@@ -88,7 +88,7 @@ const Settings = () => {
             <div className="">
                 <Container
                     align="stretch"
-                    className="p-1 flex-col lg:flex-row ph_child-settings-page"
+                    className="p-1 flex-col lg:flex-row surefeedback-settings-page"
                     containerType="flex"
                     direction="row"
                     gap="sm"
@@ -96,13 +96,13 @@ const Settings = () => {
                     style={{ height: "100%" }}
                 >
                     <Container.Item
-                        className="p-2 ph_child-sticky-outer-wrapper"
+                        className="p-2 surefeedback-sticky-outer-wrapper"
                         alignSelf="auto"
                         order="none"
                         shrink={1}
                         style={{ backgroundColor: "#ffffff" }}
                     >
-                        <div className="ph_child-sticky-sidebar">
+                        <div className="surefeedback-sticky-sidebar">
                             <Sidebar
                                 items={items}
                                 onSelectItem={handleSelectItem}
@@ -111,7 +111,7 @@ const Settings = () => {
                         </div>
                     </Container.Item>
                     <Container.Item
-                        className="p-2 flex w-full justify-center items-start ph_child-hide-scrollbar"
+                        className="p-2 flex w-full justify-center items-start surefeedback-hide-scrollbar"
                         alignSelf="auto"
                         order="none"
                         shrink={1}
@@ -120,7 +120,7 @@ const Settings = () => {
                             overflowY: "auto",
                         }}
                     >
-                        <div className="ph_child-78-width">
+                        <div className="surefeedback-78-width">
                             <Content selectedItem={selectedItem} />
                         </div>
                     </Container.Item>

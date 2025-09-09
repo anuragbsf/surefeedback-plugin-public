@@ -131,9 +131,9 @@ export default function TestConnectionStep({
                   </Text>
                   <Container containerType="flex" align="center" gap="xs">
                     <Badge 
-                      variant={connectionSettings.ph_child_parent_url?.includes('app.surefeedback.com') ? 'blue' : 'green'} 
+                      variant={connectionSettings.surefeedback_parent_url?.includes('app.surefeedback.com') ? 'blue' : 'green'} 
                       size="xs" 
-                      label={connectionSettings.ph_child_parent_url?.includes('app.surefeedback.com') ? 'SaaS' : 'Self-Hosted'} 
+                      label={connectionSettings.surefeedback_parent_url?.includes('app.surefeedback.com') ? 'SaaS' : 'Self-Hosted'} 
                     />
                   </Container>
                 </div>
@@ -143,7 +143,7 @@ export default function TestConnectionStep({
                     SERVER URL
                   </Text>
                   <Text size={14} color="primary">
-                    {connectionSettings.ph_child_parent_url}
+                    {connectionSettings.surefeedback_parent_url}
                   </Text>
                 </div>
               </div>

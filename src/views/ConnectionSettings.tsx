@@ -7,8 +7,8 @@ import { CheckCircle, AlertTriangle } from 'lucide-react'
 const ConnectionSettings: React.FC = () => {
   const { settings, isConnected, disconnectUrl, testConnection, clearErrors } = useSettings()
 
-  const visitDashboardUrl = settings.connection.ph_child_parent_url
-    ? `${settings.connection.ph_child_parent_url}/projects/${settings.connection.ph_child_id}`
+  const visitDashboardUrl = settings.connection.surefeedback_parent_url
+    ? `${settings.connection.surefeedback_parent_url}/projects/${settings.connection.surefeedback_id}`
     : '#'
 
   const handleTestConnection = async () => {
@@ -16,7 +16,7 @@ const ConnectionSettings: React.FC = () => {
   }
 
   const confirmDisconnect = () => {
-    if (window.confirm(__('Are you sure you want to disconnect? This will stop comment synchronization.', 'ph-child'))) {
+    if (window.confirm(__('Are you sure you want to disconnect? This will stop comment synchronization.', 'surefeedback'))) {
       window.location.href = disconnectUrl
     }
   }
@@ -42,10 +42,10 @@ const ConnectionSettings: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-emerald-900 leading-tight">
-                    {__('Connected', 'ph-child')}
+                    {__('Connected', 'surefeedback')}
                   </h3>
                   <p className="text-xs text-emerald-700 leading-tight">
-                    {__('Ready to sync comments', 'ph-child')}
+                    {__('Ready to sync comments', 'surefeedback')}
                   </p>
                 </div>
               </div>
@@ -65,13 +65,13 @@ const ConnectionSettings: React.FC = () => {
                 <div className="connection-detail">
                   <dt className="text-xs font-medium text-gray-500 mb-1">Parent Site URL</dt>
                   <dd className="text-xs text-gray-900 bg-gray-50/50 px-2 py-1.5 rounded border border-gray-200/60 font-mono break-all">
-                    {settings.connection.ph_child_parent_url}
+                    {settings.connection.surefeedback_parent_url}
                   </dd>
                 </div>
                 <div className="connection-detail">
                   <dt className="text-xs font-medium text-gray-500 mb-1">Project ID</dt>
                   <dd className="text-xs text-gray-900 bg-gray-50/50 px-2 py-1.5 rounded border border-gray-200/60 font-mono">
-                    {settings.connection.ph_child_id}
+                    {settings.connection.surefeedback_id}
                   </dd>
                 </div>
               </div>
@@ -85,20 +85,20 @@ const ConnectionSettings: React.FC = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {__('Dashboard', 'ph-child')}
+                  {__('Dashboard', 'surefeedback')}
                 </a>
                 <button 
                   disabled={settings.loading}
                   onClick={handleTestConnection}
                   className="inline-flex items-center px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {__('Test', 'ph-child')}
+                  {__('Test', 'surefeedback')}
                 </button>
                 <button 
                   onClick={confirmDisconnect}
                   className="inline-flex items-center px-2 py-1 text-xs bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
-                  {__('Disconnect', 'ph-child')}
+                  {__('Disconnect', 'surefeedback')}
                 </button>
               </div>
             </div>
@@ -117,10 +117,10 @@ const ConnectionSettings: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-orange-900 leading-tight">
-                  {__('Not Connected', 'ph-child')}
+                  {__('Not Connected', 'surefeedback')}
                 </h3>
                 <p className="text-xs text-orange-700 leading-tight">
-                  {__('Connect to your SureFeedback dashboard to start collecting feedback', 'ph-child')}
+                  {__('Connect to your SureFeedback dashboard to start collecting feedback', 'surefeedback')}
                 </p>
               </div>
             </div>
@@ -129,7 +129,7 @@ const ConnectionSettings: React.FC = () => {
           {/* Connection setup instructions would go here */}
           <div className="bg-white border border-gray-200/60 rounded-md p-3">
             <p className="text-sm text-gray-600">
-              {__('Please visit your SureFeedback dashboard to connect this site.', 'ph-child')}
+              {__('Please visit your SureFeedback dashboard to connect this site.', 'surefeedback')}
             </p>
           </div>
         </div>
@@ -146,7 +146,7 @@ const ConnectionSettings: React.FC = () => {
 }
 
 // WordPress translation function fallback
-function __(text: string, domain: string = 'ph-child'): string {
+function __(text: string, domain: string = 'surefeedback'): string {
   if (typeof window !== 'undefined' && window.wp?.i18n?.__) {
     return window.wp.i18n.__(text, domain)
   }

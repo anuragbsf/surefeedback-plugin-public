@@ -7,7 +7,7 @@ module.exports = function (grunt) {
 
     addtextdomain: {
       options: {
-        textdomain: "ph-child",
+        textdomain: "surefeedback",
       },
       update_all_domains: {
         options: {
@@ -37,8 +37,8 @@ module.exports = function (grunt) {
         options: {
           domainPath: "/languages",
           exclude: [".git/*", "bin/*", "node_modules/*", "tests/*"],
-          mainFile: "ph-child.php",
-          potFilename: "ph-child.pot",
+          mainFile: "surefeedback.php",
+          potFilename: "surefeedback.pot",
           potHeaders: {
             poedit: true,
             "x-poedit-keywordslist": true,
@@ -52,7 +52,7 @@ module.exports = function (grunt) {
     compress: {
       main: {
         options: {
-          archive: "ph-child.zip",
+          archive: "surefeedback.zip",
         },
         files: [
           {

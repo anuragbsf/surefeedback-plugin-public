@@ -16,8 +16,8 @@ const ExtendWebsite = () => {
             'surerank/surerank.php': {
                 icon: sureFeedbackAdmin.surerank_icon,
                 type: 'plugin',
-                name: __('Boost Your Traffic with Easy SEO Optimization!', 'ph_child'),
-                desc: __('Rank higher with effortless SEO optimization. SureRank offers a simple, clutter-free interface with lightweight code, minimal setup, clear meta and schema settings, and smart content optimization that actually makes sense, helping you grow your traffic easily.', 'ph_child'),
+                name: __('Boost Your Traffic with Easy SEO Optimization!', 'surefeedback'),
+                desc: __('Rank higher with effortless SEO optimization. SureRank offers a simple, clutter-free interface with lightweight code, minimal setup, clear meta and schema settings, and smart content optimization that actually makes sense, helping you grow your traffic easily.', 'surefeedback'),
                 wporg: 'https://wordpress.org/plugins/surerank/',
                 url: 'https://downloads.wordpress.org/plugin/surerank.zip',
                 siteurl: 'https://surerank.com/',
@@ -29,8 +29,8 @@ const ExtendWebsite = () => {
             'surecart/surecart.php': {
                 icon: sureFeedbackAdmin.surecart_icon,
                 type: 'plugin',
-                name: __('Sell Products Effortlessly with SureCart!', 'ph_child'),
-                desc: __('Sell your products effortlessly with a modern, flexible eCommerce system. SureCart makes it easy to set up one-click checkout, manage subscriptions, recover abandoned carts, and collect secure payments, helping you launch and grow your online store confidently.', 'ph_child'),
+                name: __('Sell Products Effortlessly with SureCart!', 'surefeedback'),
+                desc: __('Sell your products effortlessly with a modern, flexible eCommerce system. SureCart makes it easy to set up one-click checkout, manage subscriptions, recover abandoned carts, and collect secure payments, helping you launch and grow your online store confidently.', 'surefeedback'),
                 wporg: 'https://wordpress.org/plugins/surecart/',
                 url: 'https://downloads.wordpress.org/plugin/surecart.zip',
                 siteurl: 'https://surecart.com/',
@@ -42,8 +42,8 @@ const ExtendWebsite = () => {
             'sureforms/sureforms.php': {
                 icon: sureFeedbackAdmin.sureforms_icon,
                 type: 'plugin',
-                name: __('Build Powerful Forms in Minutes with SureForms!', 'ph_child'),
-                desc: __('Build powerful forms in minutes without complexity. SureForms lets you create contact forms, payment forms, and surveys using an AI-assisted, clean interface with conversational layouts, conditional logic, payment collection, and mobile optimization for a seamless experience.', 'ph_child'),
+                name: __('Build Powerful Forms in Minutes with SureForms!', 'surefeedback'),
+                desc: __('Build powerful forms in minutes without complexity. SureForms lets you create contact forms, payment forms, and surveys using an AI-assisted, clean interface with conversational layouts, conditional logic, payment collection, and mobile optimization for a seamless experience.', 'surefeedback'),
                 wporg: 'https://wordpress.org/plugins/sureforms/',
                 url: 'https://downloads.wordpress.org/plugin/sureforms.zip',
                 siteurl: 'https://sureforms.com/',
@@ -55,8 +55,8 @@ const ExtendWebsite = () => {
             'presto-player/presto-player.php': {
                 icon: sureFeedbackAdmin.presto_player_icon,
                 type: 'plugin',
-                name: __('Add Engaging Videos Seamlessly with Presto Player!', 'ph_child'),
-                desc: __('Add engaging videos seamlessly in minutes without complexity. Presto Player lets you enhance your website with videos using branding, chapters, and call-to-actions while providing fast load times, detailed analytics, and user-friendly controls for a seamless viewing experience.', 'ph_child'),
+                name: __('Add Engaging Videos Seamlessly with Presto Player!', 'surefeedback'),
+                desc: __('Add engaging videos seamlessly in minutes without complexity. Presto Player lets you enhance your website with videos using branding, chapters, and call-to-actions while providing fast load times, detailed analytics, and user-friendly controls for a seamless viewing experience.', 'surefeedback'),
                 wporg: 'https://wordpress.org/plugins/presto-player/',
                 url: 'https://downloads.wordpress.org/plugin/presto-player.zip',
                 siteurl: 'https://prestoplayer.com/',
@@ -68,8 +68,8 @@ const ExtendWebsite = () => {
             'suretriggers/suretriggers.php': {
                 icon: sureFeedbackAdmin.suretriggers_icon,
                 type: 'plugin',
-                name: __('Automate Your Workflows Easily with Ottokit!', 'ph_child'),
-                desc: __('Automate workflows effortlessly in minutes without complexity. Ottokit lets you connect your WordPress site with web apps to automate tasks, sync data, and run actions using a clean visual builder with scheduling, filters, conditions, and webhooks for a seamless experience.', 'ph_child'),
+                name: __('Automate Your Workflows Easily with Ottokit!', 'surefeedback'),
+                desc: __('Automate workflows effortlessly in minutes without complexity. Ottokit lets you connect your WordPress site with web apps to automate tasks, sync data, and run actions using a clean visual builder with scheduling, filters, conditions, and webhooks for a seamless experience.', 'surefeedback'),
                 wporg: 'https://wordpress.org/plugins/suretriggers/',
                 url: 'https://downloads.wordpress.org/plugin/suretriggers.zip',
                 siteurl: 'https://ottokit.com/',
@@ -168,7 +168,7 @@ const ExtendWebsite = () => {
         <div className="bg-white w-full" style={{ borderRadius: '6px'}}>
             <div className="flex items-center justify-between p-4" style={{ paddingBottom: '0' }}>
                 <p className="m-0 text-sm font-semibold text-text-primary">
-                    {__("Super Charge Your Workflow", "ph_child")}
+                    {__("Super Charge Your Workflow", "surefeedback")}
                 </p>
                 <div className="flex items-center gap-x-2 mr-7"></div>
             </div>

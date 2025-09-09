@@ -47,13 +47,13 @@ const Connection = () => {
                         className=""
                         size="md"
                         tag="h3"
-                        title={__("Your Connection", "ph_child")}
+                        title={__("Your Connection", "surefeedback")}
                     />
                 </div>
                 <p className="text-sm font-medium text-text-tertiary m-0  mt-2" style={{ maxWidth: '23rem' }}>
                     {__(
                         "Connect to your SureFeedback Dashboard to unlock advanced features, manage projects efficiently, customize settings, and gain full control over your feedback workflow.",
-                        "ph_child"
+                        "surefeedback"
                     )}
                 </p>
                 {settings?.map((setting, index) => {
@@ -68,14 +68,14 @@ const Connection = () => {
                                 onClick={(e) => handleTabRedirect(e, setting.tab)}
                             >
                                 <Button
-                                    className="ph_child-remove-ring w-80 rounded-md"
+                                    className="surefeedback-remove-ring w-80 rounded-md"
                                     icon={<Plus />}
                                     iconPosition="right"
                                     size="md"
                                     style={{  borderRadius: '4px' }}
                                     variant="primary"
                                 >
-                                    {__('Connect', 'ph_child')}
+                                    {__('Connect', 'surefeedback')}
                                 </Button>
                             </Link>
                         </div>

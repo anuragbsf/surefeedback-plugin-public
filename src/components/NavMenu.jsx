@@ -68,7 +68,7 @@ const NavMenu = () => {
 
 	return (
 		<Topbar
-			className="ph_child-nav-menu relative"
+			className="surefeedback-nav-menu relative"
 			style={{
 				width: "unset",
 				padding: "0.5rem",
@@ -103,7 +103,7 @@ const NavMenu = () => {
 									}`}
 									style={linkStyle("dashboard")}
 								>
-									{__("Dashboard", "ph_child")}
+									{__("Dashboard", "surefeedback")}
 								</Link>
 								<Link
 									to={routes.settings.path}
@@ -114,7 +114,7 @@ const NavMenu = () => {
 									}`}
 									style={linkStyle("settings")}
 								>
-									{__("Settings", "ph_child")}
+									{__("Settings", "surefeedback")}
 								</Link>
 								<Link
 									to={routes.connection.path}
@@ -125,7 +125,7 @@ const NavMenu = () => {
 								>
 									{__(
 										"Connections",
-										"ph_child"
+										"surefeedback"
 									)}
 								</Link>
 							</nav>
@@ -138,7 +138,7 @@ const NavMenu = () => {
 									<Badge
 										label={__(
 											"Free",
-											"ph_child"
+											"surefeedback"
 										)}
 										size="xs"
 										variant="neutral"
@@ -152,7 +152,7 @@ const NavMenu = () => {
 											<DropdownMenu.Item>
 												{__(
 													"Version",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											{/* <DropdownMenu.Item>
@@ -161,7 +161,7 @@ const NavMenu = () => {
 													<Badge
 														label={__(
 															"Free",
-															"ph_child"
+															"surefeedback"
 														)}
 														size="xs"
 														variant="neutral"
@@ -186,7 +186,7 @@ const NavMenu = () => {
 											<DropdownMenu.Item>
 												{__(
 													"Useful Resources",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
@@ -203,7 +203,7 @@ const NavMenu = () => {
 												/>
 												{__(
 													"Getting Started",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
@@ -216,7 +216,7 @@ const NavMenu = () => {
 												<FileText />
 												{__(
 													"How to use widgets",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
@@ -229,7 +229,7 @@ const NavMenu = () => {
 												<FileText />
 												{__(
 													"How to use features",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
@@ -242,7 +242,7 @@ const NavMenu = () => {
 												<FileText />
 												{__(
 													"How to use templates",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 											<DropdownMenu.Item
@@ -255,7 +255,7 @@ const NavMenu = () => {
 												<Headset />
 												{__(
 													"Contact us",
-													"ph_child"
+													"surefeedback"
 												)}
 											</DropdownMenu.Item>
 										</DropdownMenu.List>
@@ -266,7 +266,7 @@ const NavMenu = () => {
 						</Topbar.Item>
 						<Link to={routes.settings.path}>
 							<User
-								className="cursor-pointer ph_child-user-icon"
+								className="cursor-pointer surefeedback-user-icon"
 								style={{ color: "black" }}
 							/>
 						</Link>

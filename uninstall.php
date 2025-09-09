@@ -17,14 +17,14 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 // delete our options.
-delete_option( 'ph_child_api_key' );
-delete_option( 'ph_child_access_token' );
-delete_option( 'ph_child_project_id' );
-delete_option( 'ph_child_parent_url' );
-delete_option( 'ph_child_signature' );
-delete_option( 'ph_child_installed' );
-delete_option( 'ph_child_admin_enabled' );
-delete_option( 'ph_child_allow_guests' );
-delete_option( 'ph_child_connection_status' );
-delete_option( 'ph_child_commenters' );
-delete_option( 'ph_child_manual_connection' );
+delete_option( 'surefeedback_api_key' );
+delete_option( 'surefeedback_access_token' );
+delete_option( 'surefeedback_project_id' );
+delete_option( 'surefeedback_parent_url' );
+delete_option( 'surefeedback_signature' );
+delete_option( 'surefeedback_installed' );
+delete_option( 'surefeedback_admin_enabled' );
+delete_option( 'surefeedback_allow_guests' );
+delete_option( 'surefeedback_connection_status' );
+delete_option( 'surefeedback_commenters' );
+delete_option( 'surefeedback_manual_connection' );

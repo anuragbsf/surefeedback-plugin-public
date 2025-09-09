@@ -32,7 +32,7 @@ const QuickSettings = () => {
                     paddingBottom: '0',
                     borderRadius: '6px',
                 }}>
-                <p className='m-0 text-sm font-semibold text-text-primary mb-2 md:mb-0'>{__("Quick Settings", "ph_child")}</p>
+                <p className='m-0 text-sm font-semibold text-text-primary mb-2 md:mb-0'>{__("Quick Settings", "surefeedback")}</p>
             </div>
             <div className='flex  flex-col rounded-lg p-4'>
                 {loading ? (
@@ -85,7 +85,7 @@ const QuickSettings = () => {
                                             onClick={(e) => handleTabRedirect(e, setting.tab)}
                                             className="text-sm text-text-tertiary cursor-pointer no-underline hover:text-gray-600"
                                         >
-                                            {__("Customize", "ph_child")}
+                                            {__("Customize", "surefeedback")}
                                         </Link>
                                     </div>
                                 </Container.Item>

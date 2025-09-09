@@ -14,10 +14,10 @@ parameters:
 	scanFiles:
 	bootstrapFiles:
 		- vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
-		- tests/php/stubs/phchild-stubs.php
+		- tests/php/stubs/surefeedback-stubs.php
 	paths:
-		- ph-child.php
-		- ph-child-functions.php
+		- surefeedback.php
+		- surefeedback-functions.php
 
 	ignoreErrors:
 		- '#Call to an undefined method [a-zA-Z0-9\\_]+\:\:add_control\(\).$#'

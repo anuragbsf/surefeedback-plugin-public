@@ -1,24 +1,24 @@
 export interface GeneralSettings {
-  ph_child_role_can_comment: string[]
-  ph_child_guest_comments_enabled: boolean
-  ph_child_admin: boolean
+  surefeedback_role_can_comment: string[]
+  surefeedback_guest_comments_enabled: boolean
+  surefeedback_admin: boolean
 }
 
 export interface ConnectionSettings {
-  ph_child_id: number | ''
-  ph_child_api_key: string
-  ph_child_access_token: string
-  ph_child_parent_url: string
-  ph_child_signature: string
-  ph_child_installed: boolean
+  surefeedback_id: number | ''
+  surefeedback_api_key: string
+  surefeedback_access_token: string
+  surefeedback_parent_url: string
+  surefeedback_signature: string
+  surefeedback_installed: boolean
 }
 
 export interface WhiteLabelSettings {
-  ph_child_plugin_name: string
-  ph_child_plugin_description: string
-  ph_child_plugin_author: string
-  ph_child_plugin_author_url: string
-  ph_child_plugin_link: string
+  surefeedback_plugin_name: string
+  surefeedback_plugin_description: string
+  surefeedback_plugin_author: string
+  surefeedback_plugin_author_url: string
+  surefeedback_plugin_link: string
 }
 
 export interface ConnectionStatus {

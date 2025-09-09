@@ -15,7 +15,7 @@ const WhiteLabelSettings: React.FC = () => {
       {/* Header */}
       <div className="pb-3 border-b border-gray-200/60">
         <h2 className="text-base font-semibold text-gray-900 mb-0.5">White Label Settings</h2>
-        <p className="text-xs text-gray-600">{__('Customize plugin branding for your agency', 'ph-child')}</p>
+        <p className="text-xs text-gray-600">{__('Customize plugin branding for your agency', 'surefeedback')}</p>
       </div>
 
       {/* Branding Form */}
@@ -26,39 +26,39 @@ const WhiteLabelSettings: React.FC = () => {
         <div className="p-3 space-y-3">
           {/* Plugin Name */}
           <div className="form-group">
-            <label htmlFor="ph_child_plugin_name" className="block text-xs font-medium text-gray-700 mb-1.5">
-              {__('Plugin Name', 'ph-child')}
+            <label htmlFor="surefeedback_plugin_name" className="block text-xs font-medium text-gray-700 mb-1.5">
+              {__('Plugin Name', 'surefeedback')}
             </label>
             <input 
-              id="ph_child_plugin_name"
+              id="surefeedback_plugin_name"
               type="text"
-              value={settings.whiteLabel.ph_child_plugin_name}
-              onChange={(e) => handleInputChange('ph_child_plugin_name', e.target.value)}
+              value={settings.whiteLabel.surefeedback_plugin_name}
+              onChange={(e) => handleInputChange('surefeedback_plugin_name', e.target.value)}
               disabled={settings.saving}
-              placeholder={__('SureFeedback Client Site', 'ph-child')}
+              placeholder={__('SureFeedback Client Site', 'surefeedback')}
               className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500 leading-tight">
-              {__('Name displayed in plugins list and admin menu', 'ph-child')}
+              {__('Name displayed in plugins list and admin menu', 'surefeedback')}
             </p>
           </div>
 
           {/* Plugin Description */}
           <div className="form-group">
-            <label htmlFor="ph_child_plugin_description" className="block text-xs font-medium text-gray-700 mb-1.5">
-              {__('Plugin Description', 'ph-child')}
+            <label htmlFor="surefeedback_plugin_description" className="block text-xs font-medium text-gray-700 mb-1.5">
+              {__('Plugin Description', 'surefeedback')}
             </label>
             <textarea 
-              id="ph_child_plugin_description"
-              value={settings.whiteLabel.ph_child_plugin_description}
-              onChange={(e) => handleInputChange('ph_child_plugin_description', e.target.value)}
+              id="surefeedback_plugin_description"
+              value={settings.whiteLabel.surefeedback_plugin_description}
+              onChange={(e) => handleInputChange('surefeedback_plugin_description', e.target.value)}
               rows={2}
               disabled={settings.saving}
-              placeholder={__('Collect feedback from client websites and sync with SureFeedback parent project', 'ph-child')}
+              placeholder={__('Collect feedback from client websites and sync with SureFeedback parent project', 'surefeedback')}
               className="w-full resize-none text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500 leading-tight">
-              {__('Description shown in plugins list', 'ph-child')}
+              {__('Description shown in plugins list', 'surefeedback')}
             </p>
           </div>
 
@@ -66,59 +66,59 @@ const WhiteLabelSettings: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Plugin Author */}
             <div className="form-group">
-              <label htmlFor="ph_child_plugin_author" className="block text-xs font-medium text-gray-700 mb-1.5">
-                {__('Plugin Author', 'ph-child')}
+              <label htmlFor="surefeedback_plugin_author" className="block text-xs font-medium text-gray-700 mb-1.5">
+                {__('Plugin Author', 'surefeedback')}
               </label>
               <input 
-                id="ph_child_plugin_author"
+                id="surefeedback_plugin_author"
                 type="text"
-                value={settings.whiteLabel.ph_child_plugin_author}
-                onChange={(e) => handleInputChange('ph_child_plugin_author', e.target.value)}
+                value={settings.whiteLabel.surefeedback_plugin_author}
+                onChange={(e) => handleInputChange('surefeedback_plugin_author', e.target.value)}
                 disabled={settings.saving}
-                placeholder={__('Your Agency Name', 'ph-child')}
+                placeholder={__('Your Agency Name', 'surefeedback')}
                 className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500 leading-tight">
-                {__('Author name shown in plugins list', 'ph-child')}
+                {__('Author name shown in plugins list', 'surefeedback')}
               </p>
             </div>
 
             {/* Author URL */}
             <div className="form-group">
-              <label htmlFor="ph_child_plugin_author_url" className="block text-xs font-medium text-gray-700 mb-1.5">
-                {__('Author URL', 'ph-child')}
+              <label htmlFor="surefeedback_plugin_author_url" className="block text-xs font-medium text-gray-700 mb-1.5">
+                {__('Author URL', 'surefeedback')}
               </label>
               <input 
-                id="ph_child_plugin_author_url"
+                id="surefeedback_plugin_author_url"
                 type="url"
-                value={settings.whiteLabel.ph_child_plugin_author_url}
-                onChange={(e) => handleInputChange('ph_child_plugin_author_url', e.target.value)}
+                value={settings.whiteLabel.surefeedback_plugin_author_url}
+                onChange={(e) => handleInputChange('surefeedback_plugin_author_url', e.target.value)}
                 disabled={settings.saving}
-                placeholder={__('https://youragency.com', 'ph-child')}
+                placeholder={__('https://youragency.com', 'surefeedback')}
                 className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500 leading-tight">
-                {__('URL linked from author name', 'ph-child')}
+                {__('URL linked from author name', 'surefeedback')}
               </p>
             </div>
           </div>
 
           {/* Plugin URL */}
           <div className="form-group">
-            <label htmlFor="ph_child_plugin_link" className="block text-xs font-medium text-gray-700 mb-1.5">
-              {__('Plugin URL', 'ph-child')}
+            <label htmlFor="surefeedback_plugin_link" className="block text-xs font-medium text-gray-700 mb-1.5">
+              {__('Plugin URL', 'surefeedback')}
             </label>
             <input 
-              id="ph_child_plugin_link"
+              id="surefeedback_plugin_link"
               type="url"
-              value={settings.whiteLabel.ph_child_plugin_link}
-              onChange={(e) => handleInputChange('ph_child_plugin_link', e.target.value)}
+              value={settings.whiteLabel.surefeedback_plugin_link}
+              onChange={(e) => handleInputChange('surefeedback_plugin_link', e.target.value)}
               disabled={settings.saving}
-              placeholder={__('https://youragency.com/feedback-solution', 'ph-child')}
+              placeholder={__('https://youragency.com/feedback-solution', 'surefeedback')}
               className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-xs text-gray-500 leading-tight">
-              {__('URL linked from plugin name', 'ph-child')}
+              {__('URL linked from plugin name', 'surefeedback')}
             </p>
           </div>
         </div>
@@ -129,7 +129,7 @@ const WhiteLabelSettings: React.FC = () => {
             <svg className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            <span>{__('These settings customize how the plugin appears to your clients in their WordPress admin area', 'ph-child')}</span>
+            <span>{__('These settings customize how the plugin appears to your clients in their WordPress admin area', 'surefeedback')}</span>
           </p>
         </div>
       </div>
@@ -145,7 +145,7 @@ const WhiteLabelSettings: React.FC = () => {
 }
 
 // WordPress translation function fallback
-function __(text: string, domain: string = 'ph-child'): string {
+function __(text: string, domain: string = 'surefeedback'): string {
   if (typeof window !== 'undefined' && window.wp?.i18n?.__) {
     return window.wp.i18n.__(text, domain)
   }

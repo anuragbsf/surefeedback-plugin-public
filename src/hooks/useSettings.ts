@@ -12,24 +12,24 @@ import { settingsService } from '../services'
 
 const initialState: SettingsState = {
   general: {
-    ph_child_role_can_comment: [],
-    ph_child_guest_comments_enabled: false,
-    ph_child_admin: false
+    surefeedback_role_can_comment: [],
+    surefeedback_guest_comments_enabled: false,
+    surefeedback_admin: false
   },
   connection: {
-    ph_child_id: '',
-    ph_child_api_key: '',
-    ph_child_access_token: '',
-    ph_child_parent_url: '',
-    ph_child_signature: '',
-    ph_child_installed: false
+    surefeedback_id: '',
+    surefeedback_api_key: '',
+    surefeedback_access_token: '',
+    surefeedback_parent_url: '',
+    surefeedback_signature: '',
+    surefeedback_installed: false
   },
   whiteLabel: {
-    ph_child_plugin_name: '',
-    ph_child_plugin_description: '',
-    ph_child_plugin_author: '',
-    ph_child_plugin_author_url: '',
-    ph_child_plugin_link: ''
+    surefeedback_plugin_name: '',
+    surefeedback_plugin_description: '',
+    surefeedback_plugin_author: '',
+    surefeedback_plugin_author_url: '',
+    surefeedback_plugin_link: ''
   },
   connectionStatus: {
     connected: false
@@ -46,17 +46,17 @@ export function useSettings() {
 
   // Computed values
   const isConnected = useMemo(() => {
-    return !!(settings.connection.ph_child_id && 
-             settings.connection.ph_child_api_key && 
-             settings.connection.ph_child_access_token &&
-             settings.connection.ph_child_parent_url)
+    return !!(settings.connection.surefeedback_id && 
+             settings.connection.surefeedback_api_key && 
+             settings.connection.surefeedback_access_token &&
+             settings.connection.surefeedback_parent_url)
   }, [settings.connection])
 
   const disconnectUrl = useMemo(() => {
     if (typeof window !== 'undefined' && window.sureFeedbackAdmin) {
       const nonce = window.sureFeedbackAdmin.disconnect_nonce
       const adminUrl = window.sureFeedbackAdmin.admin_url
-      return `${adminUrl}options-general.php?page=feedback-connection-options&ph-child-site-disconnect=1&ph-child-site-disconnect-nonce=${nonce}`
+      return `${adminUrl}options-general.php?page=feedback-connection-options&surefeedback-site-disconnect=1&surefeedback-site-disconnect-nonce=${nonce}`
     }
     return ''
   }, [])
@@ -199,11 +199,11 @@ export function useSettings() {
         ...prev,
         connection: {
           ...prev.connection,
-          ph_child_id: importData.project_id,
-          ph_child_api_key: importData.api_key,
-          ph_child_access_token: importData.access_token,
-          ph_child_parent_url: importData.parent_url,
-          ph_child_signature: importData.signature
+          surefeedback_id: importData.project_id,
+          surefeedback_api_key: importData.api_key,
+          surefeedback_access_token: importData.access_token,
+          surefeedback_parent_url: importData.parent_url,
+          surefeedback_signature: importData.signature
         },
         connectionStatus: response.data?.connectionStatus ? 
           { ...prev.connectionStatus, ...response.data.connectionStatus } : 
@@ -264,7 +264,7 @@ export function useSettings() {
 
   const updateRoleSelection = useCallback((roleName: string, selected: boolean) => {
     setSettings(prev => {
-      const currentRoles = [...prev.general.ph_child_role_can_comment]
+      const currentRoles = [...prev.general.surefeedback_role_can_comment]
       
       if (selected && !currentRoles.includes(roleName)) {
         currentRoles.push(roleName)
@@ -279,7 +279,7 @@ export function useSettings() {
         ...prev,
         general: {
           ...prev.general,
-          ph_child_role_can_comment: currentRoles
+          surefeedback_role_can_comment: currentRoles
         }
       }
     })
@@ -290,7 +290,7 @@ export function useSettings() {
       ...prev,
       general: {
         ...prev.general,
-        ph_child_guest_comments_enabled: enabled
+        surefeedback_guest_comments_enabled: enabled
       }
     }))
   }, [])
@@ -300,7 +300,7 @@ export function useSettings() {
       ...prev,
       general: {
         ...prev.general,
-        ph_child_admin: enabled
+        surefeedback_admin: enabled
       }
     }))
   }, [])

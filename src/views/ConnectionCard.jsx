@@ -40,18 +40,18 @@ const ConnectionCard = () => {
   useEffect(() => {
     // Check if we just came back from a disconnect operation
     const urlParams = new URLSearchParams(window.location.search);
-    const hasDisconnectSuccess = urlParams.has('ph-child-site-disconnect');
+    const hasDisconnectSuccess = urlParams.has('surefeedback-site-disconnect');
     
     if (hasDisconnectSuccess) {
       // Clean up the URL parameters
       const cleanUrl = new URL(window.location);
-      cleanUrl.searchParams.delete('ph-child-site-disconnect');
-      cleanUrl.searchParams.delete('ph-child-site-disconnect-nonce');
+      cleanUrl.searchParams.delete('surefeedback-site-disconnect');
+      cleanUrl.searchParams.delete('surefeedback-site-disconnect-nonce');
       window.history.replaceState({}, '', cleanUrl.toString());
       
       // Show success message and refresh data
       setTimeout(() => {
-        showToast(__("Successfully disconnected from SureFeedback", "ph-child"), "success");
+        showToast(__("Successfully disconnected from SureFeedback", "surefeedback"), "success");
         loadSettings().then(() => {
           setHasInitiallyLoaded(true); // Ensure we show the updated state
         });
@@ -73,7 +73,7 @@ const ConnectionCard = () => {
   // Memoize callback functions to prevent unnecessary re-renders
   const handleManualImport = useCallback(async () => {
     if (!manualConnectionData.trim()) {
-      showToast(__("Please enter connection details", "ph-child"), "error");
+      showToast(__("Please enter connection details", "surefeedback"), "error");
       return;
     }
 
@@ -82,29 +82,29 @@ const ConnectionCard = () => {
       
       // Map the connection data to the expected format
       const settingsToSave = {
-        ph_child_id: connectionData.id || connectionData.project_id,
-        ph_child_api_key: connectionData.api_key || connectionData.apikey,
-        ph_child_access_token: connectionData.access_token,
-        ph_child_parent_url: connectionData.parent_url,
-        ph_child_signature: connectionData.signature,
-        ph_child_installed: true,
+        surefeedback_id: connectionData.id || connectionData.project_id,
+        surefeedback_api_key: connectionData.api_key || connectionData.apikey,
+        surefeedback_access_token: connectionData.access_token,
+        surefeedback_parent_url: connectionData.parent_url,
+        surefeedback_signature: connectionData.signature,
+        surefeedback_installed: true,
       };
 
       const success = await saveConnectionSettings(settingsToSave);
       
       if (success) {
         setManualConnectionData("");
-        showToast(__("Connection settings saved successfully", "ph-child"), "success");
+        showToast(__("Connection settings saved successfully", "surefeedback"), "success");
       } else {
-        showToast(errors.connection || __("Failed to save connection settings", "ph-child"), "error");
+        showToast(errors.connection || __("Failed to save connection settings", "surefeedback"), "error");
       }
     } catch (error) {
-      showToast(__("Invalid JSON format. Please check your connection details.", "ph-child"), "error");
+      showToast(__("Invalid JSON format. Please check your connection details.", "surefeedback"), "error");
     }
   }, [manualConnectionData, saveConnectionSettings, showToast, errors.connection]);
 
   const handleDisconnect = useCallback(async () => {
-    if (!window.confirm(__("Are you sure you want to disconnect? This will remove all connection settings.", "ph-child"))) {
+    if (!window.confirm(__("Are you sure you want to disconnect? This will remove all connection settings.", "surefeedback"))) {
       return;
     }
 
@@ -113,14 +113,14 @@ const ConnectionCard = () => {
     try {
       // Use the original PHP disconnect functionality with URL parameters
       const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('ph-child-site-disconnect', '1');
-      currentUrl.searchParams.set('ph-child-site-disconnect-nonce', window.sureFeedbackAdmin?.disconnect_nonce || '');
+      currentUrl.searchParams.set('surefeedback-site-disconnect', '1');
+      currentUrl.searchParams.set('surefeedback-site-disconnect-nonce', window.sureFeedbackAdmin?.disconnect_nonce || '');
       
       // Redirect to disconnect URL - this will be handled by PHP
       window.location.href = currentUrl.toString();
     } catch (error) {
       setIsDisconnecting(false);
-      showToast(__("Failed to disconnect", "ph-child"), "error");
+      showToast(__("Failed to disconnect", "surefeedback"), "error");
     }
   }, [showToast]);
 
@@ -128,9 +128,9 @@ const ConnectionCard = () => {
     const success = await testConnection();
     
     if (success) {
-      showToast(__("Connection test successful", "ph-child"), "success");
+      showToast(__("Connection test successful", "surefeedback"), "success");
     } else {
-      showToast(errors.connection || __("Connection test failed", "ph-child"), "error");
+      showToast(errors.connection || __("Connection test failed", "surefeedback"), "error");
     }
   }, [testConnection, showToast, errors.connection]);
 
@@ -140,7 +140,7 @@ const ConnectionCard = () => {
       return (
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: "#f8f9fa" }}>
           <LoaderCircle size={16} className="animate-spin" />
-          <span>{__("Loading connection status...", "ph-child")}</span>
+          <span>{__("Loading connection status...", "surefeedback")}</span>
         </div>
       );
     }
@@ -150,7 +150,7 @@ const ConnectionCard = () => {
         <div className="flex items-center w-80 gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: "#daecda", marginTop: "12px", borderRadius: "6px" }}>
           <CheckCircle size={16} style={{ color: "#559a55" }} />
           <span style={{ color: "#559a55", fontWeight: "500" }}>
-            {__("Connected to", "ph-child")} {connectionStatus.parent_url}
+            {__("Connected to", "surefeedback")} {connectionStatus.parent_url}
           </span>
         </div>
       );
@@ -160,7 +160,7 @@ const ConnectionCard = () => {
       <div className="flex items-center w-4/5 gap-2 px-4 py-2 rounded-lg" style={{ backgroundColor: "#f1ebd3", marginTop: "12px", borderRadius: "6px" }}>
         <AlertCircle size={16} style={{ color: "#9c8a44" }} />
         <span style={{ color: "#9c8a44", fontWeight: "500" }}>
-          {__("Not Connected. Please connect this plugin to your SureFeedback installation", "ph-child")}
+          {__("Not Connected. Please connect this plugin to your SureFeedback installation", "surefeedback")}
         </span>
       </div>
     );
@@ -180,10 +180,10 @@ const ConnectionCard = () => {
         iconPosition="right"
         size="sm"
         tag="h2"
-        title={__("Connection", "ph-child")}
+        title={__("Connection", "surefeedback")}
         description={__(
           "Connect your site to your SureFeedback installation to enable feedback collection",
-          "ph-child"
+          "surefeedback"
         )}
       />
       <div
@@ -199,10 +199,10 @@ const ConnectionCard = () => {
             iconPosition="right"
             size="xs"
             tag="h2"
-            title={__("Connection Status", "ph-child")}
+            title={__("Connection Status", "surefeedback")}
             description={__(
               "Current connection status with your SureFeedback parent site",
-              "ph-child"
+              "surefeedback"
             )}
           />
           
@@ -213,24 +213,24 @@ const ConnectionCard = () => {
               <Button
                 variant="secondary"
                 onClick={handleDisconnect}
-                className="ph_child-remove-ring"
+                className="surefeedback-remove-ring"
                 disabled={isDisconnecting}
                 style={{ backgroundColor: "#4353FF", borderRadius: '6px' }}
               >
                 {isDisconnecting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                {isDisconnecting ? __("Disconnecting...", "ph-child") : __("Disconnect", "ph-child")}
+                {isDisconnecting ? __("Disconnecting...", "surefeedback") : __("Disconnect", "surefeedback")}
               </Button>
               
               {getDashboardUrl() && (
                 <Button
                   variant="secondary"
-                   className="ph_child-remove-ring"
+                   className="surefeedback-remove-ring"
                   onClick={() => window.open(getDashboardUrl(), "_blank")}
                   iconPosition="right"
                   style={{ backgroundColor: "#4353FF", borderRadius: '6px' }}
                 >
                   <ExternalLink className="ml-2 h-4 w-4" />
-                  {__("Visit Dashboard Site", "ph-child")}
+                  {__("Visit Dashboard Site", "surefeedback")}
                 </Button>
               )}
               
@@ -238,11 +238,11 @@ const ConnectionCard = () => {
                 variant="secondary"
                 onClick={handleTestConnection}
                 disabled={loading}
-                 className="ph_child-remove-ring"
+                 className="surefeedback-remove-ring"
                 style={{ backgroundColor: "#4353FF", borderRadius: '6px' }}
               >
                 {loading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? __("Testing...", "ph-child") : __("Test Connection", "ph-child")}
+                {loading ? __("Testing...", "surefeedback") : __("Test Connection", "surefeedback")}
               </Button>
             </div>
           )}
@@ -258,7 +258,7 @@ const ConnectionCard = () => {
                 <p className="text-base font-normal">
                   {__(
                     "Having challenges connecting plugin? Please reach out",
-                    "ph-child"
+                    "surefeedback"
                   )}
                 </p>
               </span>
@@ -273,7 +273,7 @@ const ConnectionCard = () => {
                   transition: "color 0.3s ease, border-color 0.3s ease",
                   fontSize: "16px",
                 }}
-                className="ph_child-remove-ring text-[#6005FF]"
+                className="surefeedback-remove-ring text-[#6005FF]"
                 onClick={() => {
                   window.open(
                     "https://surefeedback.com/docs/adding-a-clients-wordpress-site#manual",
@@ -282,7 +282,7 @@ const ConnectionCard = () => {
                 }}
               >
                 <ArrowUpRight className="ml-2 h-4 w-4" />
-                {__("Need Help ?", "ph-child")}
+                {__("Need Help ?", "surefeedback")}
               </Button>
             </div>
           )}
@@ -310,17 +310,17 @@ const ConnectionCard = () => {
             >
               <Container.Item className="flex flex-col w-full space-y-1">
                 <div className="text-base text-field-label font-semibold m-0">
-                  {__("Manual Connection Details", "ph-child")}
+                  {__("Manual Connection Details", "surefeedback")}
                 </div>
                 <p className="text-sm text-field-label font-normal mr-2 mb-2">
-                  {__("If you are having trouble connecting, you can manually connect by pasting the connection details below", "ph-child")}
+                  {__("If you are having trouble connecting, you can manually connect by pasting the connection details below", "surefeedback")}
                 </p>
                 <textarea
                   value={manualConnectionData}
                   onChange={(e) => setManualConnectionData(e.target.value)}
                   name="manual_connection"
                   className="w-full border border-subtle"
-                  placeholder={__("Paste your connection JSON data here...", "ph-child")}
+                  placeholder={__("Paste your connection JSON data here...", "surefeedback")}
                   rows={6}
                   style={{
                     borderColor: "#e0e0e0",
@@ -352,7 +352,7 @@ const ConnectionCard = () => {
               className="w-40 sticky uavc-remove-ring"
             >
               {saving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              {saving ? __("Saving...", "ph-child") : __("Save Changes", "ph-child")}
+              {saving ? __("Saving...", "surefeedback") : __("Save Changes", "surefeedback")}
             </Button>
           </>
         )}

@@ -25,7 +25,7 @@ const GeneralSettings: React.FC = () => {
   }
 
   const toggleRole = (roleName: string) => {
-    const currentSelection = settings.general.ph_child_role_can_comment.includes(roleName)
+    const currentSelection = settings.general.surefeedback_role_can_comment.includes(roleName)
     handleRoleChange(roleName, !currentSelection)
   }
 
@@ -50,7 +50,7 @@ const GeneralSettings: React.FC = () => {
         <div className="bg-gray-50/50 rounded-md p-4 border border-gray-200/60">
           <div className="mb-3">
             <h3 className="text-sm font-medium text-gray-900 mb-0.5">User Permissions</h3>
-            <p className="text-xs text-gray-600">{__('Select which roles can leave comments', 'ph-child')}</p>
+            <p className="text-xs text-gray-600">{__('Select which roles can leave comments', 'surefeedback')}</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
@@ -62,7 +62,7 @@ const GeneralSettings: React.FC = () => {
               >
                 <Checkbox 
                   id={`role-${role.name}`}
-                  checked={settings.general.ph_child_role_can_comment.includes(role.name)}
+                  checked={settings.general.surefeedback_role_can_comment.includes(role.name)}
                   onChange={(val) => handleRoleChange(role.name, val)}
                   className="role-checkbox pointer-events-none"
                 />
@@ -79,7 +79,7 @@ const GeneralSettings: React.FC = () => {
           <div className="mt-3 p-2.5 bg-blue-50/50 rounded border border-blue-200/50">
             <p className="text-xs text-blue-700 flex items-start gap-1.5">
               <Info className="w-3 h-3 text-blue-600 mt-0.5 flex-shrink-0" />
-              <span>{__('Selected user roles will be able to leave comments on this site', 'ph-child')}</span>
+              <span>{__('Selected user roles will be able to leave comments on this site', 'surefeedback')}</span>
             </p>
           </div>
         </div>
@@ -92,22 +92,22 @@ const GeneralSettings: React.FC = () => {
               <div className="flex-1 pr-3">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="text-sm font-medium text-gray-900">
-                    {__('Guest Comments', 'ph-child')}
+                    {__('Guest Comments', 'surefeedback')}
                   </h4>
                   <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
-                    {settings.general.ph_child_guest_comments_enabled ? 'ON' : 'OFF'}
+                    {settings.general.surefeedback_guest_comments_enabled ? 'ON' : 'OFF'}
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 leading-tight">
-                  {__('Allow non-logged in visitors to view and add comments', 'ph-child')}
+                  {__('Allow non-logged in visitors to view and add comments', 'surefeedback')}
                 </p>
               </div>
               <div className="flex-shrink-0">
                 <Switch 
-                  checked={settings.general.ph_child_guest_comments_enabled}
+                  checked={settings.general.surefeedback_guest_comments_enabled}
                   onChange={(checked) => {
                     // Direct mutation for now - this will be handled by the parent component
-                    settings.general.ph_child_guest_comments_enabled = checked
+                    settings.general.surefeedback_guest_comments_enabled = checked
                   }}
                 />
               </div>
@@ -120,22 +120,22 @@ const GeneralSettings: React.FC = () => {
               <div className="flex-1 pr-3">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h4 className="text-sm font-medium text-gray-900">
-                    {__('Admin Area Comments', 'ph-child')}
+                    {__('Admin Area Comments', 'surefeedback')}
                   </h4>
                   <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
-                    {settings.general.ph_child_admin ? 'ON' : 'OFF'}
+                    {settings.general.surefeedback_admin ? 'ON' : 'OFF'}
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 leading-tight">
-                  {__('Enable commenting on WordPress admin pages', 'ph-child')}
+                  {__('Enable commenting on WordPress admin pages', 'surefeedback')}
                 </p>
               </div>
               <div className="flex-shrink-0">
                 <Switch 
-                  checked={settings.general.ph_child_admin}
+                  checked={settings.general.surefeedback_admin}
                   onChange={(checked) => {
                     // Direct mutation for now - this will be handled by the parent component
-                    settings.general.ph_child_admin = checked
+                    settings.general.surefeedback_admin = checked
                   }}
                 />
               </div>
@@ -155,7 +155,7 @@ const GeneralSettings: React.FC = () => {
 }
 
 // WordPress translation function fallback
-function __(text: string, domain: string = 'ph-child'): string {
+function __(text: string, domain: string = 'surefeedback'): string {
   // Check if wp.i18n is available
   if (typeof window !== 'undefined' && window.wp?.i18n?.__) {
     return window.wp.i18n.__(text, domain)

@@ -49,7 +49,7 @@ require_once 'includes/core/class-surefeedback-loader.php';
 
 if ( ! class_exists( 'SureFeedback' ) ) :
 	/**
-	 * Main PH_Child Class
+	 * Main SureFeedback Class
 	 * Uses singleton design pattern
 	 *
 	 * @since 1.0.0
@@ -74,28 +74,28 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			}
 
 			$this->whitelist_option_names = array(
-				'ph_child_id'           => array(
-					'description'       => __( 'Website project ID.', 'ph-child' ),
+				'surefeedback_id'           => array(
+					'description'       => __( 'Website project ID.', 'surefeedback' ),
 					'sanitize_callback' => 'intval',
 				),
-				'ph_child_api_key'      => array(
-					'description'       => __( 'Public API key for the script loader.', 'ph-child' ),
+				'surefeedback_api_key'      => array(
+					'description'       => __( 'Public API key for the script loader.', 'surefeedback' ),
 					'sanitize_callback' => 'sanitize_text_field',
 				),
-				'ph_child_access_token' => array(
-					'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'ph-child' ),
+				'surefeedback_access_token' => array(
+					'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'surefeedback' ),
 					'sanitize_callback' => 'sanitize_text_field',
 				),
-				'ph_child_parent_url'   => array(
-					'description'       => __( 'Parent Site URL.', 'ph-child' ),
+				'surefeedback_parent_url'   => array(
+					'description'       => __( 'Parent Site URL.', 'surefeedback' ),
 					'sanitize_callback' => 'esc_url',
 				),
-				'ph_child_signature'    => array(
-					'description'       => __( 'Secret signature to verify identity.', 'ph-child' ),
+				'surefeedback_signature'    => array(
+					'description'       => __( 'Secret signature to verify identity.', 'surefeedback' ),
 					'sanitize_callback' => 'sanitize_text_field',
 				),
-				'ph_child_installed'    => array(
-					'description'       => __( 'Is the plugin installed?', 'ph-child' ),
+				'surefeedback_installed'    => array(
+					'description'       => __( 'Is the plugin installed?', 'surefeedback' ),
 					'sanitize_callback' => 'boolval',
 				),
 			);
@@ -117,7 +117,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			if ( ! is_admin() ) {
 				add_action( 'wp_footer', array( $this, 'script' ) );
 			}
-			if ( get_option( 'ph_child_admin', false ) ) {
+			if ( get_option( 'surefeedback_admin', false ) ) {
 				add_action( 'admin_footer', array( $this, 'script' ) );
 			}
 
@@ -192,7 +192,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			if ( isset( $_GET['ct_builder'] ) ) {
 				return false; // TODO: remove once we can get pageX, pageY inside iframe.
 				// bail if admin commenting is disabled.
-				if ( ! get_option( 'ph_child_admin', false ) ) {
+				if ( ! get_option( 'surefeedback_admin', false ) ) {
 					return false;
 				}
 				// bail if not in the iframe.
@@ -210,7 +210,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function parent_plugin_activated_error_notice() {
-			$message = __( 'You have both the client site and SureFeedback core plugins activated. You must only activate the client site on a client site, and SureFeedback on your main site.', 'ph-child' );
+			$message = __( 'You have both the client site and SureFeedback core plugins activated. You must only activate the client site on a client site, and SureFeedback on your main site.', 'surefeedback' );
 			echo '<div class="error"> <p>' . esc_html( $message ) . '</p></div>';
 		}
 
@@ -233,11 +233,11 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				return $plugin_meta;
 			}
 			if ( 'projecthuddle-child-site' === $plugin_data['slug'] ) {
-				$link       = get_option( 'ph_child_plugin_link', '' );
-				$author     = get_option( 'ph_child_plugin_author', '' );
-				$author_url = get_option( 'ph_child_plugin_author_url', '' );
+				$link       = get_option( 'surefeedback_plugin_link', '' );
+				$author     = get_option( 'surefeedback_plugin_author', '' );
+				$author_url = get_option( 'surefeedback_plugin_author_url', '' );
 				if ( $link ) {
-					$plugin_meta[2] = '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html__( 'Visit plugin site', 'ph-child' ) . '</a>';
+					$plugin_meta[2] = '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html__( 'Visit plugin site', 'surefeedback' ) . '</a>';
 				}
 
 				if ( $author && $author_url ) {
@@ -262,22 +262,22 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				return $translated_text;
 			}
 			// make the changes to the text.
-			if ( 'ph-child' === $domain ) { // added this check to avoid conflicting other plugins.
+			if ( 'surefeedback' === $domain ) { // added this check to avoid conflicting other plugins.
 				switch ( $untranslated_text ) {
 					case 'SureFeedback Client Site':
-						$name = get_option( 'ph_child_plugin_name', false );
+						$name = get_option( 'surefeedback_plugin_name', false );
 						if ( $name ) {
 							$translated_text = $name;
 						}
 						break;
 					case 'Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.':
-						$description = get_option( 'ph_child_plugin_description', false );
+						$description = get_option( 'surefeedback_plugin_description', false );
 						if ( $description ) {
 							$translated_text = $description;
 						}
 						break;
 					case 'Brainstorm Force':
-						$author = get_option( 'ph_child_plugin_author', false );
+						$author = get_option( 'surefeedback_plugin_author', false );
 						if ( $author ) {
 							$translated_text = $author;
 						}
@@ -298,8 +298,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return array        Modified links
 		 */
 		public function add_settings_link( $links ) {
-			$dashboard_link = '<a href="' . admin_url( 'admin.php?page=surefeedback#dashboard' ) . '">' . __( 'Dashboard', 'ph-child' ) . '</a>';
-			$settings_link = '<a href="' . admin_url( 'admin.php?page=surefeedback#settings' ) . '">' . __( 'Settings', 'ph-child' ) . '</a>';
+			$dashboard_link = '<a href="' . admin_url( 'admin.php?page=surefeedback#dashboard' ) . '">' . __( 'Dashboard', 'surefeedback' ) . '</a>';
+			$settings_link = '<a href="' . admin_url( 'admin.php?page=surefeedback#settings' ) . '">' . __( 'Settings', 'surefeedback' ) . '</a>';
 			array_push( $links, $dashboard_link, $settings_link );
 			return $links;
 		}
@@ -312,8 +312,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return array
 		 */
 		public function remove_disconnect_args( $args ) {
-			array_push( $args, 'ph-child-site-disconnect-nonce' );
-			array_push( $args, 'ph-child-site-disconnect' );
+			array_push( $args, 'surefeedback-site-disconnect-nonce' );
+			array_push( $args, 'surefeedback-site-disconnect' );
 			return $args;
 		}
 
@@ -323,12 +323,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function maybe_disconnect() {
-			if ( ! isset( $_GET['ph-child-site-disconnect'] ) ) {
+			if ( ! isset( $_GET['surefeedback-site-disconnect'] ) ) {
 				return;
 			}
 
 			// nonce check.
-			if ( ! isset( $_GET['ph-child-site-disconnect-nonce'] ) || ! wp_verify_nonce( $_GET['ph-child-site-disconnect-nonce'], 'ph-child-site-disconnect-nonce' ) ) {
+			if ( ! isset( $_GET['surefeedback-site-disconnect-nonce'] ) || ! wp_verify_nonce( $_GET['surefeedback-site-disconnect-nonce'], 'surefeedback-site-disconnect-nonce' ) ) {
 				wp_die( 'That\'s not allowed' );
 			}
 
@@ -358,7 +358,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function register_installation() {
-			update_option( 'ph_child_installed', true );
+			update_option( 'surefeedback_installed', true );
 		}
 
 		/**
@@ -367,7 +367,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function deregister_installation() {
-			delete_option( 'ph_child_installed' );
+			delete_option( 'surefeedback_installed' );
 		}
 
 		/**
@@ -395,12 +395,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function create_menu() {
-			$plugin_name = get_option( 'ph_child_plugin_name', false );
-			$menu_title = $plugin_name ? esc_html( $plugin_name ) : __( 'SureFeedback', 'ph-child' );
+			$plugin_name = get_option( 'surefeedback_plugin_name', false );
+			$menu_title = $plugin_name ? esc_html( $plugin_name ) : __( 'SureFeedback', 'surefeedback' );
 			
 			// Add main menu page
 			add_menu_page(
-				__( 'SureFeedback', 'ph-child' ), // Page title
+				__( 'SureFeedback', 'surefeedback' ), // Page title
 				$menu_title, // Menu title
 				'manage_options', // Capability
 				'surefeedback', // Menu slug
@@ -412,8 +412,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// Add dashboard submenu
 			add_submenu_page(
 				'surefeedback', // Parent slug
-				__( 'Dashboard', 'ph-child' ), // Page title
-				__( 'Dashboard', 'ph-child' ), // Menu title
+				__( 'Dashboard', 'surefeedback' ), // Page title
+				__( 'Dashboard', 'surefeedback' ), // Menu title
 				'manage_options', // Capability
 				'surefeedback', // Menu slug
 				array( $this, 'main_page' ) // Function
@@ -422,8 +422,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// Add settings submenu
 			add_submenu_page(
 				'surefeedback', // Parent slug
-				__( 'Settings', 'ph-child' ), // Page title
-				__( 'Settings', 'ph-child' ), // Menu title
+				__( 'Settings', 'surefeedback' ), // Page title
+				__( 'Settings', 'surefeedback' ), // Menu title
 				'manage_options', // Capability
 				'surefeedback#settings', // Menu slug
 				array( $this, 'main_page' ) // Function
@@ -432,8 +432,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// Add settings submenu
 			add_submenu_page(
 				'surefeedback', // Parent slug
-				__( 'Connection', 'ph-child' ), // Page title
-				__( 'Connection', 'ph-child' ), // Menu title
+				__( 'Connection', 'surefeedback' ), // Page title
+				__( 'Connection', 'surefeedback' ), // Menu title
 				'manage_options', // Capability
 				'surefeedback#connection', // Menu slug
 				array( $this, 'main_page' ) // Function
@@ -441,7 +441,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			
 			// Keep the old settings page for backward compatibility
 			add_options_page(
-				__( 'Feedback Connection', 'ph-child' ),
+				__( 'Feedback Connection', 'surefeedback' ),
 				$menu_title,
 				'manage_options',
 				'feedback-connection-options',
@@ -530,9 +530,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'admin_url'        => admin_url(),
 						'ajax_url'         => admin_url( 'admin-ajax.php' ),
 						'plugin_url'       => SUREFEEDBACK_PLUGIN_URL,
-						'nonce'            => wp_create_nonce( 'ph_child_admin_nonce' ),
-						'installer_nonce'  => wp_create_nonce( 'ph_child_installer_nonce' ),
-						'disconnect_nonce' => wp_create_nonce( 'ph-child-site-disconnect-nonce' ),
+						'nonce'            => wp_create_nonce( 'surefeedback_admin_nonce' ),
+						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
+						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
 						'icon_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/project-huddle-icon.png',
 						'welcome_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/Video player.png',
@@ -639,58 +639,58 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		public function options() {
 			add_settings_section(
 				'ph_general_section', // ID.
-				__( 'General Settings', 'ph-child' ), // title.
+				__( 'General Settings', 'surefeedback' ), // title.
 				'__return_false', // description.
-				'ph_child_general_options' // Page on which to add this section of options.
+				'surefeedback_general_options' // Page on which to add this section of options.
 			);
 
 			add_settings_field(
-				'ph_child_enabled_comment_roles',
-				__( 'Comments Visibility Access', 'ph-child' ),
+				'surefeedback_enabled_comment_roles',
+				__( 'Comments Visibility Access', 'surefeedback' ),
 				array( $this, 'commenters_checklist' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_general_options', // The page on which this option will be displayed.
+				'surefeedback_general_options', // The page on which this option will be displayed.
 				'ph_general_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			// Finally, we register the fields with WordPress.
 			register_setting(
-				'ph_child_general_options',
-				'ph_child_enabled_comment_roles',
-				'ph_child_help_link'
+				'surefeedback_general_options',
+				'surefeedback_enabled_comment_roles',
+				'surefeedback_help_link'
 			);
 
 			add_settings_field(
-				'ph_child_allow_guests',
-				__( 'Allow Site Visitors', 'ph-child' ),
+				'surefeedback_allow_guests',
+				__( 'Allow Site Visitors', 'surefeedback' ),
 				array( $this, 'allow_guests' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_general_options', // The page on which this option will be displayed.
+				'surefeedback_general_options', // The page on which this option will be displayed.
 				'ph_general_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			// register setting.
 			register_setting(
-				'ph_child_general_options',
-				'ph_child_allow_guests',
+				'surefeedback_general_options',
+				'surefeedback_allow_guests',
 				array(
 					'type' => 'boolean',
 				)
 			);
 
 			add_settings_field(
-				'ph_child_admin',
-				__( 'Dashboard Commenting', 'ph-child' ),
+				'surefeedback_admin',
+				__( 'Dashboard Commenting', 'surefeedback' ),
 				array( $this, 'allow_admin' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_general_options', // The page on which this option will be displayed.
+				'surefeedback_general_options', // The page on which this option will be displayed.
 				'ph_general_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			// register setting.
 			register_setting(
-				'ph_child_general_options',
-				'ph_child_admin',
+				'surefeedback_general_options',
+				'surefeedback_admin',
 				array(
 					'type' => 'boolean',
 				)
@@ -698,42 +698,42 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 
 			add_settings_section(
 				'ph_connection_status_section', // ID.
-				__( 'Connection', 'ph-child' ), // title.
+				__( 'Connection', 'surefeedback' ), // title.
 				'__return_false', // description.
-				'ph_child_connection_options' // Page on which to add this section of options.
+				'surefeedback_connection_options' // Page on which to add this section of options.
 			);
 
 			add_settings_field(
 				'ph_connection_status',
-				__( 'Connection Status', 'ph-child' ),
+				__( 'Connection Status', 'surefeedback' ),
 				array( $this, 'connection_status' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_connection_options', // The page on which this option will be displayed.
+				'surefeedback_connection_options', // The page on which this option will be displayed.
 				'ph_connection_status_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_help_link',
+				'surefeedback_help_link',
 				'',
 				array( $this, 'help_link' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_connection_options', // The page on which this option will be displayed.
+				'surefeedback_connection_options', // The page on which this option will be displayed.
 				'ph_connection_status_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_manual_connection',
-				__( 'Manual Connection Details', 'ph-child' ),
+				'surefeedback_manual_connection',
+				__( 'Manual Connection Details', 'surefeedback' ),
 				array( $this, 'manual_connection' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_connection_options', // The page on which this option will be displayed.
+				'surefeedback_connection_options', // The page on which this option will be displayed.
 				'ph_connection_status_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			// register setting.
 			register_setting(
-				'ph_child_connection_options',
-				'ph_child_manual_connection',
+				'surefeedback_connection_options',
+				'surefeedback_manual_connection',
 				array(
 					'type'              => 'string',
 					'sanitize_callback' => array( $this, 'manual_import' ),
@@ -741,85 +741,85 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			);
 
 			add_settings_section(
-				'ph_child_white_label_section', // ID.
-				__( 'White Label', 'ph-child' ), // title.
+				'surefeedback_white_label_section', // ID.
+				__( 'White Label', 'surefeedback' ), // title.
 				'__return_false', // description.
-				'ph_child_white_label_options' // Page on which to add this section of options.
+				'surefeedback_white_label_options' // Page on which to add this section of options.
 			);
 
 			add_settings_field(
-				'ph_child_plugin_name',
-				__( 'Plugin Name', 'ph-child' ),
+				'surefeedback_plugin_name',
+				__( 'Plugin Name', 'surefeedback' ),
 				array( $this, 'plugin_name' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_white_label_options', // The page on which this option will be displayed.
-				'ph_child_white_label_section', // The name of the section to which this field belongs.
+				'surefeedback_white_label_options', // The page on which this option will be displayed.
+				'surefeedback_white_label_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_plugin_description',
-				__( 'Plugin Description', 'ph-child' ),
+				'surefeedback_plugin_description',
+				__( 'Plugin Description', 'surefeedback' ),
 				array( $this, 'plugin_description' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_white_label_options', // The page on which this option will be displayed.
-				'ph_child_white_label_section', // The name of the section to which this field belongs.
+				'surefeedback_white_label_options', // The page on which this option will be displayed.
+				'surefeedback_white_label_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_plugin_author',
-				__( 'Plugin Author', 'ph-child' ),
+				'surefeedback_plugin_author',
+				__( 'Plugin Author', 'surefeedback' ),
 				array( $this, 'plugin_author' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_white_label_options', // The page on which this option will be displayed.
-				'ph_child_white_label_section', // The name of the section to which this field belongs.
+				'surefeedback_white_label_options', // The page on which this option will be displayed.
+				'surefeedback_white_label_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_plugin_author_url',
-				__( 'Plugin Author URL', 'ph-child' ),
+				'surefeedback_plugin_author_url',
+				__( 'Plugin Author URL', 'surefeedback' ),
 				array( $this, 'plugin_author_url' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_white_label_options', // The page on which this option will be displayed.
-				'ph_child_white_label_section', // The name of the section to which this field belongs.
+				'surefeedback_white_label_options', // The page on which this option will be displayed.
+				'surefeedback_white_label_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			add_settings_field(
-				'ph_child_plugin_link',
-				__( 'Plugin Link', 'ph-child' ),
+				'surefeedback_plugin_link',
+				__( 'Plugin Link', 'surefeedback' ),
 				array( $this, 'plugin_link' ), // The name of the function responsible for rendering the option interface.
-				'ph_child_white_label_options', // The page on which this option will be displayed.
-				'ph_child_white_label_section', // The name of the section to which this field belongs.
+				'surefeedback_white_label_options', // The page on which this option will be displayed.
+				'surefeedback_white_label_section', // The name of the section to which this field belongs.
 				false
 			);
 
 			// register setting.
 			register_setting(
-				'ph_child_white_label_options',
-				'ph_child_plugin_name',
+				'surefeedback_white_label_options',
+				'surefeedback_plugin_name',
 				array(
 					'type' => 'string',
 				)
 			);
 			// register setting.
 			register_setting(
-				'ph_child_white_label_options',
-				'ph_child_plugin_description',
+				'surefeedback_white_label_options',
+				'surefeedback_plugin_description',
 				array(
 					'type' => 'string',
 				)
 			);
 			// register setting.
 			register_setting(
-				'ph_child_white_label_options',
-				'ph_child_plugin_author',
+				'surefeedback_white_label_options',
+				'surefeedback_plugin_author',
 				array(
 					'type' => 'string',
 				)
 			);
 
 			register_setting(
-				'ph_child_white_label_options',
-				'ph_child_plugin_author_url',
+				'surefeedback_white_label_options',
+				'surefeedback_plugin_author_url',
 				array(
 					'type' => 'string',
 				)
@@ -827,8 +827,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 
 			// register setting.
 			register_setting(
-				'ph_child_white_label_options',
-				'ph_child_plugin_link',
+				'surefeedback_white_label_options',
+				'surefeedback_plugin_link',
 				array(
 					'type' => 'string',
 				)
@@ -842,7 +842,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function plugin_name() {
 			?>
-				<input type="text" name="ph_child_plugin_name" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'ph_child_plugin_name', '' ) ) ); ?>" />
+				<input type="text" name="surefeedback_plugin_name" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_name', '' ) ) ); ?>" />
 				<?php
 		}
 
@@ -853,7 +853,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function plugin_description() {
 			?>
-				<textarea name="ph_child_plugin_description" rows="3" class="regular-text"><?php echo esc_attr( sanitize_text_field( get_option( 'ph_child_plugin_description', '' ) ) ); ?></textarea>
+				<textarea name="surefeedback_plugin_description" rows="3" class="regular-text"><?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_description', '' ) ) ); ?></textarea>
 				<?php
 		}
 
@@ -864,7 +864,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function plugin_author() {
 			?>
-				<input type="text" name="ph_child_plugin_author" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'ph_child_plugin_author', '' ) ) ); ?>" />
+				<input type="text" name="surefeedback_plugin_author" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_author', '' ) ) ); ?>" />
 				<?php
 		}
 
@@ -875,7 +875,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function plugin_author_url() {
 			?>
-				<input type="text" name="ph_child_plugin_author_url" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'ph_child_plugin_author_url', '' ) ) ); ?>" />
+				<input type="text" name="surefeedback_plugin_author_url" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_author_url', '' ) ) ); ?>" />
 				<?php
 		}
 
@@ -886,7 +886,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function plugin_link() {
 			?>
-				<input type="url" name="ph_child_plugin_link" class="regular-text" value="<?php echo esc_attr( esc_url( get_option( 'ph_child_plugin_link', '' ) ) ); ?>" />
+				<input type="url" name="surefeedback_plugin_link" class="regular-text" value="<?php echo esc_attr( esc_url( get_option( 'surefeedback_plugin_link', '' ) ) ); ?>" />
 				<?php
 		}
 
@@ -902,9 +902,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// update manual import.
 			if ( ! empty( $settings ) ) {
 				foreach ( $settings as $key => $value ) {
-					if ( array_key_exists( 'ph_child_' . $key, $this->whitelist_option_names ) ) {
-						$sanitize = $this->whitelist_option_names[ 'ph_child_' . $key ]['sanitize_callback'];
-						$updated  = update_option( 'ph_child_' . $key, $sanitize( $value ) );
+					if ( array_key_exists( 'surefeedback_' . $key, $this->whitelist_option_names ) ) {
+						$sanitize = $this->whitelist_option_names[ 'surefeedback_' . $key ]['sanitize_callback'];
+						$updated  = update_option( 'surefeedback_' . $key, $sanitize( $value ) );
 					}
 				}
 			}
@@ -918,7 +918,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function commenters_checklist() {
-			$disable_roles = (array) get_option( 'ph_child_enabled_comment_roles', array() );
+			$disable_roles = (array) get_option( 'surefeedback_enabled_comment_roles', array() );
 			$roles         = (array) get_editable_roles();
 
 			if ( ! empty( $roles ) ) {
@@ -929,13 +929,13 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						$checked = in_array( $slug, $disable_roles );
 					}
 					?>
-						<input type="checkbox" name="ph_child_enabled_comment_roles[<?php echo esc_attr( $slug ); ?>]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $checked ); ?>> <?php echo esc_html( $role['name'] ); ?><br>
+						<input type="checkbox" name="surefeedback_enabled_comment_roles[<?php echo esc_attr( $slug ); ?>]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $checked ); ?>> <?php echo esc_html( $role['name'] ); ?><br>
 						<?php
 				}
 				?>
 				<br><span class="description">
 				<?php
-				esc_html_e( 'Allow above user roles to view comments on your site without access token.', 'ph-child' );
+				esc_html_e( 'Allow above user roles to view comments on your site without access token.', 'surefeedback' );
 				?>
 				</span> 
 				<?php
@@ -949,8 +949,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function allow_guests() {
 			?>
-				<input type="checkbox" name="ph_child_allow_guests" <?php checked( get_option( 'ph_child_allow_guests', false ), 'on' ); ?>>
-				<?php esc_html_e( 'Allow the site visitors to view and add comments on your site without access token.', 'ph-child' ); ?><br>
+				<input type="checkbox" name="surefeedback_allow_guests" <?php checked( get_option( 'surefeedback_allow_guests', false ), 'on' ); ?>>
+				<?php esc_html_e( 'Allow the site visitors to view and add comments on your site without access token.', 'surefeedback' ); ?><br>
 				<?php
 		}
 
@@ -961,8 +961,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function allow_admin() {
 			?>
-				<input type="checkbox" name="ph_child_admin" <?php checked( get_option( 'ph_child_admin', false ), 'on' ); ?>>
-				<?php esc_html_e( 'Allow commenting in your site\'s WordPress dashboard area.', 'ph-child' ); ?><br>
+				<input type="checkbox" name="surefeedback_admin" <?php checked( get_option( 'surefeedback_admin', false ), 'on' ); ?>>
+				<?php esc_html_e( 'Allow commenting in your site\'s WordPress dashboard area.', 'surefeedback' ); ?><br>
 				<?php
 		}
 
@@ -996,39 +996,39 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 					a.ph-admin-link {
 						margin-left: 10px !important;
 					}
-					.ph-child-disable-row {
+					.surefeedback-disable-row {
 						display: none;
 					}
 				</style>
 				<?php
-				$connection              = get_option( 'ph_child_parent_url', false );
-				$site_id                 = (int) get_option( 'ph_child_id' );
+				$connection              = get_option( 'surefeedback_parent_url', false );
+				$site_id                 = (int) get_option( 'surefeedback_id' );
 				$dashboard_url           = $connection . '/wp-admin/post.php?post=' . $site_id . '&action=edit';
-				$whitelabeld_plugin_name = get_option( 'ph_child_plugin_name', false );
+				$whitelabeld_plugin_name = get_option( 'surefeedback_plugin_name', false );
 				if ( $connection ) {
 					/* translators: %s: parent site URL */
-					echo '<p class="ph-badge ph-connected">' . sprintf( __( 'Connected to %s', 'ph-child' ), esc_url( $connection ) ) . '</p>';
+					echo '<p class="ph-badge ph-connected">' . sprintf( __( 'Connected to %s', 'surefeedback' ), esc_url( $connection ) ) . '</p>';
 					echo '<p class="submit">';
-						echo '<a class="button button-secondary ph-child-reload" href="' . esc_url(
+						echo '<a class="button button-secondary surefeedback-reload" href="' . esc_url(
 							add_query_arg(
 								array(
-									'ph-child-site-disconnect' => 1,
-									'ph-child-site-disconnect-nonce' => wp_create_nonce( 'ph-child-site-disconnect-nonce' ),
+									'surefeedback-site-disconnect' => 1,
+									'surefeedback-site-disconnect-nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 								),
 								remove_query_arg( 'settings-updated' )
 							)
-						) . '">' . esc_html__( 'Disconnect', 'ph-child' ) . '</a>';
+						) . '">' . esc_html__( 'Disconnect', 'surefeedback' ) . '</a>';
 					if ( ! $whitelabeld_plugin_name ) {
-						echo '<a class="button button-secondary ph-admin-link" target="_blank" href="' . esc_url( $dashboard_url ) . '">' . esc_html__( 'Visit Dashboard Site', 'ph-child' ) . '</a>';
+						echo '<a class="button button-secondary ph-admin-link" target="_blank" href="' . esc_url( $dashboard_url ) . '">' . esc_html__( 'Visit Dashboard Site', 'surefeedback' ) . '</a>';
 					}
 					echo '</p>';
 				} else {
 					echo '<p class="ph-badge ph-not-connected">';
-					esc_html_e( 'Not Connected. Please connect this plugin to your Feedback installation.', 'ph-child' );
+					esc_html_e( 'Not Connected. Please connect this plugin to your Feedback installation.', 'surefeedback' );
 					echo '</p>';
 					?>
 					<style>
-					.ph-child-disable-row {
+					.surefeedback-disable-row {
 						display: revert !important;
 					}
 					</style>
@@ -1044,12 +1044,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function help_link() {
-			$whitelabel_name = get_option( 'ph_child_plugin_name', false );
+			$whitelabel_name = get_option( 'surefeedback_plugin_name', false );
 			if ( ! $whitelabel_name ) {
 				?>
 				<p class="submit">
-					<a class="ph-child-help-link" style="text-decoration: none;" target="_blank" href="https://surefeedback.com/docs/adding-a-clients-wordpress-site#manual">
-						<?php esc_html_e( 'Need Help?', 'ph-child' ); ?>
+					<a class="surefeedback-help-link" style="text-decoration: none;" target="_blank" href="https://surefeedback.com/docs/adding-a-clients-wordpress-site#manual">
+						<?php esc_html_e( 'Need Help?', 'surefeedback' ); ?>
 					</a> 
 				</p>
 				<?php
@@ -1063,8 +1063,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function manual_connection() {
 			?>
-				<p class="ph-child-manual-connection"><?php esc_html_e( 'If you are having trouble connecting, you can manually connect by pasting the connection details below', 'ph-child' ); ?></p><br>
-				<textarea name="ph_child_manual_connection" style="width:500px;height:300px"></textarea>
+				<p class="surefeedback-manual-connection"><?php esc_html_e( 'If you are having trouble connecting, you can manually connect by pasting the connection details below', 'surefeedback' ); ?></p><br>
+				<textarea name="surefeedback_manual_connection" style="width:500px;height:300px"></textarea>
 				<?php
 		}
 
@@ -1077,8 +1077,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		public function ph_custom_inline_script() {
 			$script_code = '
 			jQuery(document).ready(function($) {
-				$(".ph-child-manual-connection").closest("tr").addClass("ph-child-disable-row"); 
-				$(".ph-child-help-link").closest("tr").addClass("ph-child-disable-row"); 
+				$(".surefeedback-manual-connection").closest("tr").addClass("surefeedback-disable-row"); 
+				$(".surefeedback-help-link").closest("tr").addClass("surefeedback-disable-row"); 
 			});
 				 ';
 			wp_register_script( 'ph-custom-footer-script', '', array(), '', true );
@@ -1104,7 +1104,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 
 			?>
 			<script>
-				window.PH_Child = <?php echo json_encode( $user_data ); ?>
+				window.SureFeedback = <?php echo json_encode( $user_data ); ?>
 			</script>
 			<?php
 		}
@@ -1178,9 +1178,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'admin_url'        => admin_url(),
 						'ajax_url'         => admin_url( 'admin-ajax.php' ),
 						'plugin_url'       => SUREFEEDBACK_PLUGIN_URL,
-						'nonce'            => wp_create_nonce( 'ph_child_admin_nonce' ),
-						'installer_nonce'  => wp_create_nonce( 'ph_child_installer_nonce' ),
-						'disconnect_nonce' => wp_create_nonce( 'ph-child-site-disconnect-nonce' ),
+						'nonce'            => wp_create_nonce( 'surefeedback_admin_nonce' ),
+						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
+						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
 						'surerank_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surerank.svg',
 						'surecart_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surecart.svg',
@@ -1214,7 +1214,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return bool
 		 */
 		public function has_valid_cookie() {
-			$token = get_option( 'ph_child_access_token', '' );
+			$token = get_option( 'surefeedback_access_token', '' );
 			if ( ! $token ) {
 				return false;
 			}
@@ -1250,12 +1250,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			}
 
 			// settings must be set.
-			$url = get_option( 'ph_child_parent_url' );
+			$url = get_option( 'surefeedback_parent_url' );
 			if ( ! $url ) {
 				echo '<!-- SureFeedback: parent url not set -->';
 				return;
 			}
-			$id = get_option( 'ph_child_id' );
+			$id = get_option( 'surefeedback_id' );
 			if ( ! $id ) {
 				echo '<!-- SureFeedback: project id not set -->';
 				return;
@@ -1267,20 +1267,20 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// always have project and public api key.
 			$args = array(
 				'p'         => (int) $id,
-				'ph_apikey' => get_option( 'ph_child_api_key', '' ),
+				'ph_apikey' => get_option( 'surefeedback_api_key', '' ),
 			);
 
 			// auto-add access token and signature if current user is allowed to comment.
 			if ( $allowed ) {
-				$args['ph_access_token'] = get_option( 'ph_child_access_token', '' );
-				$args['ph_signature']    = hash_hmac( 'sha256', 'guest', get_option( 'ph_child_signature', false ) );
+				$args['ph_access_token'] = get_option( 'surefeedback_access_token', '' );
+				$args['ph_signature']    = hash_hmac( 'sha256', 'guest', get_option( 'surefeedback_signature', false ) );
 				// if user is logged in, add name and email data.
 				if ( is_user_logged_in() ) {
 					$user                  = wp_get_current_user();
 					$args['ph_user_name']  = urlencode( $user->display_name );
 					$args['ph_user_email'] = sanitize_email( str_replace( '+', '%2B', $user->user_email ) );
-					$args['ph_signature']  = hash_hmac( 'sha256', sanitize_email( $user->user_email ), get_option( 'ph_child_signature', false ) );
-					$args['ph_query_vars'] = filter_var( get_option( 'ph_child_admin', false ), FILTER_VALIDATE_BOOLEAN );
+					$args['ph_signature']  = hash_hmac( 'sha256', sanitize_email( $user->user_email ), get_option( 'surefeedback_signature', false ) );
+					$args['ph_query_vars'] = filter_var( get_option( 'surefeedback_admin', false ), FILTER_VALIDATE_BOOLEAN );
 				}
 			}
 
@@ -1321,7 +1321,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function ajax_install_plugin() {
 			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['_ajax_nonce'], 'ph_child_installer_nonce' ) ) {
+			if ( ! wp_verify_nonce( $_POST['_ajax_nonce'], 'surefeedback_installer_nonce' ) ) {
 				wp_die( 'Security check failed' );
 			}
 
@@ -1375,7 +1375,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function ajax_activate_plugin() {
 			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'ph_child_admin_nonce' ) ) {
+			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
 				wp_die( 'Security check failed' );
 			}
 
@@ -1402,7 +1402,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function ajax_get_plugin_status() {
 			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'ph_child_admin_nonce' ) ) {
+			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
 				wp_die( 'Security check failed' );
 			}
 

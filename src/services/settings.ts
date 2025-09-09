@@ -53,8 +53,8 @@ class SettingsService {
    */
   async testConnection(connection: ConnectionSettings): Promise<ApiResponse> {
     return requestService.postplugin(API_ENDPOINTS.SETTINGS.TEST_CONNECTION, {
-      parent_url: connection.ph_child_parent_url,
-      access_token: connection.ph_child_access_token,
+      parent_url: connection.surefeedback_parent_url,
+      access_token: connection.surefeedback_access_token,
     });
   }
 }

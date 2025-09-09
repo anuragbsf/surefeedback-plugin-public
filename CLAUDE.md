@@ -8,9 +8,9 @@ This is a WordPress plugin called "SureFeedback Client Site" that creates a secu
 
 ### Key Architecture
 
-- **Main Plugin Class**: `PH_Child` in `ph-child.php` - singleton pattern with core functionality
-- **REST API**: `PH_Child_REST_API` in `ph-child-rest-api.php` - handles secure API endpoints
-- **Helper Functions**: `ph-child-functions.php` - utility functions and compatibility checks
+- **Main Plugin Class**: `SureFeedback` in `surefeedback.php` - singleton pattern with core functionality
+- **REST API**: `SureFeedback_REST_API` in `surefeedback-rest-api.php` - handles secure API endpoints
+- **Helper Functions**: `surefeedback-functions.php` - utility functions and compatibility checks
 - **Security Model**: Multi-layered authentication using WordPress roles, access tokens, and HMAC signatures
 
 ## Development Commands
@@ -69,10 +69,10 @@ npm run release
 ## Core Plugin Structure
 
 ### Main Files
-- `ph-child.php` - Main plugin file with PH_Child class
-- `ph-child-rest-api.php` - REST API endpoints (/surefeedback/v1/)
-- `ph-child-admin-api.php` - Admin REST API for Vue.js frontend
-- `ph-child-functions.php` - Utility functions and compatibility
+- `surefeedback.php` - Main plugin file with SureFeedback class
+- `surefeedback-rest-api.php` - REST API endpoints (/surefeedback/v1/)
+- `surefeedback-admin-api.php` - Admin REST API for Vue.js frontend
+- `surefeedback-functions.php` - Utility functions and compatibility
 - `uninstall.php` - Clean uninstall process
 
 ### Frontend Architecture (Vue.js + TypeScript)
@@ -103,11 +103,11 @@ The plugin automatically disables on page builder interfaces:
 ## Configuration Options
 
 Key WordPress options stored:
-- `ph_child_id` - Website project ID
-- `ph_child_api_key` - Public API key for script loader
-- `ph_child_access_token` - REST API access token
-- `ph_child_parent_url` - Parent SureFeedback site URL
-- `ph_child_signature` - Secret signature for HMAC verification
+- `surefeedback_id` - Website project ID
+- `surefeedback_api_key` - Public API key for script loader
+- `surefeedback_access_token` - REST API access token
+- `surefeedback_parent_url` - Parent SureFeedback site URL
+- `surefeedback_signature` - Secret signature for HMAC verification
 
 ## Development Guidelines
 
@@ -130,7 +130,7 @@ Key WordPress options stored:
 
 ## Deployment Process
 
-1. Version updates in `ph-child.php` and `readme.txt`
+1. Version updates in `surefeedback.php` and `readme.txt`
 2. Run quality checks: `composer lint && composer phpstan`
 3. Create release package: `grunt release`
 4. Deploy to WordPress.org: `npm run release` (uses `sync.sh`)
@@ -138,12 +138,12 @@ Key WordPress options stored:
 ## Common Tasks
 
 ### Adding New Settings
-1. Add to `$whitelist_option_names` array in `PH_Child::__construct()`
+1. Add to `$whitelist_option_names` array in `SureFeedback::__construct()`
 2. Include sanitization callback and description
 3. Update admin interface in options page method
 
 ### Extending REST API
-1. Add new route in `PH_Child_REST_API::register_routes()`
+1. Add new route in `SureFeedback_REST_API::register_routes()`
 2. Implement permission callback with `verify_access()`
 3. Add CORS headers for cross-origin requests
 

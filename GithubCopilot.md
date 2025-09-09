@@ -71,7 +71,7 @@ graph TB
 
 ```mermaid
 classDiagram
-    class PH_Child {
+    class SureFeedback {
         -whitelist_option_names: array
         +__construct()
         +script()
@@ -81,7 +81,7 @@ classDiagram
         +white_label()
     }
     
-    class PH_Child_REST_API {
+    class SureFeedback_REST_API {
         +register_routes()
         +verify_access()
         +get_pages()
@@ -102,10 +102,10 @@ classDiagram
         +white_label_settings()
     }
     
-    PH_Child --> PH_Child_REST_API
-    PH_Child --> Security
-    PH_Child --> Configuration
-    PH_Child_REST_API --> Security
+    SureFeedback --> SureFeedback_REST_API
+    SureFeedback --> Security
+    SureFeedback --> Configuration
+    SureFeedback_REST_API --> Security
 ```
 
 ### Data Flow Architecture
@@ -139,9 +139,9 @@ sequenceDiagram
 ```
 projecthuddle-child-site/
 ├── Core Files
-│   ├── ph-child.php                    # Main plugin file & class
-│   ├── ph-child-functions.php          # Utility functions
-│   ├── ph-child-rest-api.php          # REST API implementation
+│   ├── surefeedback.php                    # Main plugin file & class
+│   ├── surefeedback-functions.php          # Utility functions
+│   ├── surefeedback-rest-api.php          # REST API implementation
 │   └── uninstall.php                   # Clean uninstall process
 ├── Configuration
 │   ├── composer.json                   # PHP dependencies
@@ -194,7 +194,7 @@ The plugin implements a sophisticated multi-layer security system:
    ```php
    public function verify_access($request) {
        $token = $request->get_header('X-SureFeedback-Token');
-       $valid_token = get_option('ph_child_access_token', '');
+       $valid_token = get_option('surefeedback_access_token', '');
        
        if (!hash_equals($valid_token, $token)) {
            return new WP_Error('rest_forbidden', 'Invalid access token');
@@ -207,7 +207,7 @@ The plugin implements a sophisticated multi-layer security system:
    $args['ph_signature'] = hash_hmac(
        'sha256', 
        sanitize_email($user->user_email), 
-       get_option('ph_child_signature', false)
+       get_option('surefeedback_signature', false)
    );
    ```
 
@@ -514,7 +514,7 @@ npm run release          # Deploy to WordPress.org
    // Implement token rotation
    public function rotate_access_token() {
        $new_token = wp_generate_password(32, false);
-       update_option('ph_child_access_token', $new_token);
+       update_option('surefeedback_access_token', $new_token);
        return $new_token;
    }
    ```
@@ -556,7 +556,7 @@ npm run release          # Deploy to WordPress.org
    ```php
    // Add webhook notifications
    public function trigger_webhook($event, $data) {
-       $webhook_url = get_option('ph_child_webhook_url');
+       $webhook_url = get_option('surefeedback_webhook_url');
        if ($webhook_url) {
            wp_remote_post($webhook_url, [
                'body' => json_encode(['event' => $event, 'data' => $data])

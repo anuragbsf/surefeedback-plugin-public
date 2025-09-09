@@ -1,5 +1,5 @@
 {
-  "name": "projecthuddle/ph-child",
+  "name": "surefeedback/surefeedback",
   "description": "Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.",
   "require-dev": {
     "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
@@ -14,7 +14,7 @@
   "scripts": {
     "format": "phpcbf --standard=phpcs.xml.dist --report-summary --report-source",
     "lint": "phpcs --standard=phpcs.xml.dist --report-summary --report-source",
-    "gen-stubs": "php -d memory_limit=-1 vendor/bin/generate-stubs artifact/phpstan/ph-child/ --out=tests/php/stubs/phchild-stubs.php && rm -rf artifact/phpstan",
+    "gen-stubs": "php -d memory_limit=-1 vendor/bin/generate-stubs artifact/phpstan/surefeedback/ --out=tests/php/stubs/surefeedback-stubs.php && rm -rf artifact/phpstan",
     "phpstan": "vendor/bin/phpstan --memory-limit=2048M analyse"
   },
   "config": {

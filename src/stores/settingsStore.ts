@@ -45,26 +45,26 @@ interface SettingsStoreState extends SettingsState {
 }
 
 const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
-  ph_child_role_can_comment: ['administrator'],
-  ph_child_guest_comments_enabled: true,
-  ph_child_admin: false,
+  surefeedback_role_can_comment: ['administrator'],
+  surefeedback_guest_comments_enabled: true,
+  surefeedback_admin: false,
 };
 
 const DEFAULT_CONNECTION_SETTINGS: ConnectionSettings = {
-  ph_child_id: '',
-  ph_child_api_key: '',
-  ph_child_access_token: '',
-  ph_child_parent_url: '',
-  ph_child_signature: '',
-  ph_child_installed: false,
+  surefeedback_id: '',
+  surefeedback_api_key: '',
+  surefeedback_access_token: '',
+  surefeedback_parent_url: '',
+  surefeedback_signature: '',
+  surefeedback_installed: false,
 };
 
 const DEFAULT_WHITE_LABEL_SETTINGS: WhiteLabelSettings = {
-  ph_child_plugin_name: 'SureFeedback',
-  ph_child_plugin_description: '',
-  ph_child_plugin_author: '',
-  ph_child_plugin_author_url: '',
-  ph_child_plugin_link: '',
+  surefeedback_plugin_name: 'SureFeedback',
+  surefeedback_plugin_description: '',
+  surefeedback_plugin_author: '',
+  surefeedback_plugin_author_url: '',
+  surefeedback_plugin_link: '',
 };
 
 const DEFAULT_CONNECTION_STATUS: ConnectionStatus = {
@@ -128,11 +128,11 @@ export const useSettingsStore = create<SettingsStoreState>()(
               draft.whiteLabel = { ...DEFAULT_WHITE_LABEL_SETTINGS, ...whiteLabel };
               
               // Properly determine connection status based on loaded data
-              const hasConnectionData = connection?.ph_child_parent_url && connection?.ph_child_id;
+              const hasConnectionData = connection?.surefeedback_parent_url && connection?.surefeedback_id;
               const computedConnectionStatus = {
                 connected: !!hasConnectionData,
-                parent_url: connection?.ph_child_parent_url || undefined,
-                project_id: connection?.ph_child_id || undefined,
+                parent_url: connection?.surefeedback_parent_url || undefined,
+                project_id: connection?.surefeedback_id || undefined,
                 last_verified: connectionStatus?.last_verified || undefined,
               };
               
@@ -302,11 +302,11 @@ export const useSettingsStore = create<SettingsStoreState>()(
       // Refresh connection status based on current connection data
       refreshConnectionStatus: () =>
         set((draft) => {
-          const hasConnectionData = draft.connection.ph_child_parent_url && draft.connection.ph_child_id;
+          const hasConnectionData = draft.connection.surefeedback_parent_url && draft.connection.surefeedback_id;
           draft.connectionStatus = {
             connected: !!hasConnectionData,
-            parent_url: draft.connection.ph_child_parent_url || undefined,
-            project_id: draft.connection.ph_child_id || undefined,
+            parent_url: draft.connection.surefeedback_parent_url || undefined,
+            project_id: draft.connection.surefeedback_id || undefined,
             last_verified: draft.connectionStatus.last_verified,
           };
         }),

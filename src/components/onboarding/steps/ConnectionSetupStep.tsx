@@ -46,11 +46,11 @@ export default function ConnectionSetupStep({
     
     // Map form fields to connection settings
     const settingsMap: Record<string, keyof ConnectionSettings> = {
-      parent_url: 'ph_child_parent_url',
-      access_token: 'ph_child_access_token',
-      api_key: 'ph_child_api_key',
-      project_id: 'ph_child_id',
-      signature: 'ph_child_signature',
+      parent_url: 'surefeedback_parent_url',
+      access_token: 'surefeedback_access_token',
+      api_key: 'surefeedback_api_key',
+      project_id: 'surefeedback_id',
+      signature: 'surefeedback_signature',
     };
 
     if (settingsMap[field]) {

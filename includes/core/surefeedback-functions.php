@@ -12,7 +12,7 @@
  */
 function surefeedback_is_current_user_allowed_to_comment() {
 	// if guests are allowed, yes, they are.
-	if ( get_option( 'ph_child_allow_guests', false ) ) {
+	if ( get_option( 'surefeedback_allow_guests', false ) ) {
 		return true;
 	}
 
@@ -22,7 +22,7 @@ function surefeedback_is_current_user_allowed_to_comment() {
 	}
 
 	// get enabled roles.
-	$enabled_roles = get_option( 'ph_child_enabled_comment_roles', false );
+	$enabled_roles = get_option( 'surefeedback_enabled_comment_roles', false );
 
 	// enable all if it hasn't been saved yet.
 	if ( false === $enabled_roles && is_bool( $enabled_roles ) ) {
@@ -48,8 +48,8 @@ function surefeedback_is_current_user_allowed_to_comment() {
  *
  * @return void
  */
-function ph_child_dismiss_js() {
-	$nonce = wp_create_nonce( 'ph_child_dismiss_nonce' );
+function surefeedback_dismiss_js() {
+	$nonce = wp_create_nonce( 'surefeedback_dismiss_nonce' );
 	?>
 	<script>
 		jQuery(function($) {
@@ -61,7 +61,7 @@ function ph_child_dismiss_js() {
 				$.ajax(ajaxurl, {
 					type: 'POST',
 					data: {
-						action: 'ph_child_dismissed_notice_handler',
+						action: 'surefeedback_dismissed_notice_handler',
 						type: type,
 						nonce: nonce // Include the nonce in the request.
 					}
@@ -230,10 +230,10 @@ function ph_child_dismiss_js() {
  *
  * @return void
  */
-function ph_child_ajax_notice_handler() {
+function surefeedback_ajax_notice_handler() {
 	$type = isset( $_POST['type'] ) ? sanitize_text_field( $_POST['type'] ) : false;
 
-	if ( current_user_can( 'manage_options' ) && check_ajax_referer( 'ph_child_dismiss_nonce', 'nonce' ) && $type ) {
+	if ( current_user_can( 'manage_options' ) && check_ajax_referer( 'surefeedback_dismiss_nonce', 'nonce' ) && $type ) {
 		update_option( "dismissed-$type", true );
 		update_site_option( "dismissed-$type", true );
 	}
@@ -241,7 +241,7 @@ function ph_child_ajax_notice_handler() {
 	wp_die(); // Always terminate AJAX requests with wp_die().
 }
 
-add_action( 'wp_ajax_ph_child_dismissed_notice_handler', 'ph_child_ajax_notice_handler' );
+add_action( 'wp_ajax_surefeedback_dismissed_notice_handler', 'surefeedback_ajax_notice_handler' );
 
 
 /**
@@ -249,7 +249,7 @@ add_action( 'wp_ajax_ph_child_dismissed_notice_handler', 'ph_child_ajax_notice_h
  *
  * @return void
  */
-function ph_child_flywheel_exclusions_notice() {
+function surefeedback_flywheel_exclusions_notice() {
 	// on wp flywheel.
 	if ( ! defined( 'FLYWHEEL_CONFIG_DIR' ) ) {
 		return;
@@ -264,10 +264,10 @@ function ph_child_flywheel_exclusions_notice() {
 			<p><strong>SureFeedback:</strong> ' . esc_html( sprintf( __( 'Flywheel hosting detected!  You\'ll need to request a cache exclusion in order for project access links to work correctly.', 'surefeedback' ) ) ) . '</p>
 			<p><a href="https://surefeedback.com/docs/flywheel-client-site-cache-exclusions" target="_blank">Learn More</a></p>
 		</div>';
-	ph_child_dismiss_js();
+	surefeedback_dismiss_js();
 }
 // phpcs:disable Squiz.Commenting.InlineComment.InvalidEndChar
-// add_action('admin_notices', 'ph_child_flywheel_exclusions_notice');
+// add_action('admin_notices', 'surefeedback_flywheel_exclusions_notice');
 // phpcs:enable
 
 /**
@@ -275,7 +275,7 @@ function ph_child_flywheel_exclusions_notice() {
  *
  * @return void
  */
-function ph_child_wpengine_exclusions_notice() {
+function surefeedback_wpengine_exclusions_notice() {
 	// on wp engine.
 	if ( ! defined( 'WPE_APIKEY' ) ) {
 		return;
@@ -290,8 +290,8 @@ function ph_child_wpengine_exclusions_notice() {
 			<p><strong>SureFeedback:</strong> ' . esc_html( sprintf( __( 'WPEngine hosting detected!  You\'ll need to request a cache exclusion in order for SureFeedback access links to work properly.', 'surefeedback' ) ) ) . '</p>
 			<p><a href="https://surefeedback.com/docs/wpengine-client-site-plugin-exclusions" target="_blank">Learn More</a></p>
 		</div>';
-	ph_child_dismiss_js();
+	surefeedback_dismiss_js();
 }
 // phpcs:disable Squiz.Commenting.InlineComment.InvalidEndChar
-// add_action('admin_notices', 'ph_child_wpengine_exclusions_notice');
+// add_action('admin_notices', 'surefeedback_wpengine_exclusions_notice');
 // phpcs:enable

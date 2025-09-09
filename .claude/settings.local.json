@@ -7,7 +7,11 @@
       "Read(//tmp/ph-child-migration-2/**)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Read(//Users/akshayurankar/**)",
+      "Bash(find:*)",
+      "Bash(composer lint:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": [],

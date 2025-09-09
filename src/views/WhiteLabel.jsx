@@ -32,7 +32,7 @@ const WhiteLabel = () => {
     setIsLoading(false);
     
     if (success) {
-      toast.success(__('White label settings saved successfully!', 'ph-child'));
+      toast.success(__('White label settings saved successfully!', 'surefeedback'));
     }
   };
   return (
@@ -46,7 +46,7 @@ const WhiteLabel = () => {
           iconPosition="right"
           size="sm"
           tag="h2"
-          title={__("White Label", "ph-child")}
+          title={__("White Label", "surefeedback")}
         />
       </div>
   
@@ -60,7 +60,7 @@ const WhiteLabel = () => {
             <Title
               size="sm"
               tag="h2"
-              title={__("Plugins Details", "ph-child")}
+              title={__("Plugins Details", "surefeedback")}
               description={__(
                 "You can change the author name and plugin details that are displayed in the WordPress backend.",
                 "uael"
@@ -68,15 +68,15 @@ const WhiteLabel = () => {
             />
             <Container.Item className="flex flex-col w-full space-y-1 space-x-2">
               <div className="text-base text-field-label font-semibold m-0">
-                {__("Plugin Name", "ph-child")}
+                {__("Plugin Name", "surefeedback")}
               </div>
               <input
-                name="ph_child_plugin_name"
+                name="surefeedback_plugin_name"
                 type="text"
                 className="w-full border border-subtle"
-                value={settings.whiteLabel.ph_child_plugin_name || ''}
-                onChange={(e) => handleInputChange('ph_child_plugin_name', e.target.value)}
-                placeholder={__("SureFeedback Client Site", "ph-child")}
+                value={settings.whiteLabel.surefeedback_plugin_name || ''}
+                onChange={(e) => handleInputChange('surefeedback_plugin_name', e.target.value)}
+                placeholder={__("SureFeedback Client Site", "surefeedback")}
                 disabled={saving}
                 style={{
                   height: "48px",
@@ -91,14 +91,14 @@ const WhiteLabel = () => {
             </Container.Item>
             <Container.Item className="flex flex-col w-full space-y-1 space-x-2">
               <div className="text-base text-field-label font-semibold m-0">
-                {__("Plugin Description", "ph-child")}
+                {__("Plugin Description", "surefeedback")}
               </div>
               <textarea
-                name="ph_child_plugin_description"
+                name="surefeedback_plugin_description"
                 className="w-full border border-subtle resize-none"
-                value={settings.whiteLabel.ph_child_plugin_description || ''}
-                onChange={(e) => handleInputChange('ph_child_plugin_description', e.target.value)}
-                placeholder={__("Collect feedback from client websites and sync with SureFeedback parent project", "ph-child")}
+                value={settings.whiteLabel.surefeedback_plugin_description || ''}
+                onChange={(e) => handleInputChange('surefeedback_plugin_description', e.target.value)}
+                placeholder={__("Collect feedback from client websites and sync with SureFeedback parent project", "surefeedback")}
                 disabled={saving}
                 rows={3}
                 style={{
@@ -114,15 +114,15 @@ const WhiteLabel = () => {
             </Container.Item>
             <Container.Item className="flex flex-col w-full space-y-1 space-x-2">
               <div className="text-base text-field-label font-semibold m-0">
-                {__("Plugin Author", "ph-child")}
+                {__("Plugin Author", "surefeedback")}
               </div>
               <input
-                name="ph_child_plugin_author"
+                name="surefeedback_plugin_author"
                 type="text"
                 className="w-full border border-subtle"
-                value={settings.whiteLabel.ph_child_plugin_author || ''}
-                onChange={(e) => handleInputChange('ph_child_plugin_author', e.target.value)}
-                placeholder={__("Your Agency Name", "ph-child")}
+                value={settings.whiteLabel.surefeedback_plugin_author || ''}
+                onChange={(e) => handleInputChange('surefeedback_plugin_author', e.target.value)}
+                placeholder={__("Your Agency Name", "surefeedback")}
                 disabled={saving}
                 style={{
                   height: "48px",
@@ -137,15 +137,15 @@ const WhiteLabel = () => {
             </Container.Item>
             <Container.Item className="flex flex-col w-full space-y-1 space-x-2">
               <div className="text-base text-field-label font-semibold m-0">
-                {__("Author URL", "ph-child")}
+                {__("Author URL", "surefeedback")}
               </div>
               <input
-                name="ph_child_plugin_author_url"
+                name="surefeedback_plugin_author_url"
                 type="url"
                 className="w-full border border-subtle"
-                value={settings.whiteLabel.ph_child_plugin_author_url || ''}
-                onChange={(e) => handleInputChange('ph_child_plugin_author_url', e.target.value)}
-                placeholder={__("https://youragency.com", "ph-child")}
+                value={settings.whiteLabel.surefeedback_plugin_author_url || ''}
+                onChange={(e) => handleInputChange('surefeedback_plugin_author_url', e.target.value)}
+                placeholder={__("https://youragency.com", "surefeedback")}
                 disabled={saving}
                 style={{
                   height: "48px",
@@ -161,15 +161,15 @@ const WhiteLabel = () => {
 
             <Container.Item className="flex flex-col w-full space-y-1 space-x-2">
               <div className="text-base text-field-label font-semibold m-0">
-                {__("Plugin URL", "ph-child")}
+                {__("Plugin URL", "surefeedback")}
               </div>
               <input
-                name="ph_child_plugin_link"
+                name="surefeedback_plugin_link"
                 type="url"
                 className="w-full border border-subtle"
-                value={settings.whiteLabel.ph_child_plugin_link || ''}
-                onChange={(e) => handleInputChange('ph_child_plugin_link', e.target.value)}
-                placeholder={__("https://youragency.com/feedback-solution", "ph-child")}
+                value={settings.whiteLabel.surefeedback_plugin_link || ''}
+                onChange={(e) => handleInputChange('surefeedback_plugin_link', e.target.value)}
+                placeholder={__("https://youragency.com/feedback-solution", "surefeedback")}
                 disabled={saving}
                 style={{
                   height: "48px",
@@ -208,7 +208,7 @@ const WhiteLabel = () => {
               disabled={saving || isLoading}
             >
               {(saving || isLoading) && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              {__("Save Changes", "ph-child")}
+              {__("Save Changes", "surefeedback")}
             </Button>
            </div>
           </Container>

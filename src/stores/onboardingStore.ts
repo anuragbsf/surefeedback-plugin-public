@@ -56,12 +56,12 @@ export interface OnboardingState {
 const TOTAL_STEPS = 5;
 
 const DEFAULT_CONNECTION_SETTINGS: Partial<ConnectionSettings> = {
-  ph_child_parent_url: '',
-  ph_child_access_token: '',
-  ph_child_api_key: '',
-  ph_child_id: '',
-  ph_child_signature: '',
-  ph_child_installed: false,
+  surefeedback_parent_url: '',
+  surefeedback_access_token: '',
+  surefeedback_api_key: '',
+  surefeedback_id: '',
+  surefeedback_signature: '',
+  surefeedback_installed: false,
 };
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -116,9 +116,9 @@ export const useOnboardingStore = create<OnboardingState>()(
           state.serviceType = type;
           // Auto-fill parent URL for SaaS
           if (type === 'saas') {
-            state.connectionSettings.ph_child_parent_url = 'https://app.surefeedback.com';
+            state.connectionSettings.surefeedback_parent_url = 'https://app.surefeedback.com';
           } else if (type === 'admin') {
-            state.connectionSettings.ph_child_parent_url = '';
+            state.connectionSettings.surefeedback_parent_url = '';
           }
           // Clear validation errors when service type changes
           delete state.errors.service;
@@ -128,10 +128,10 @@ export const useOnboardingStore = create<OnboardingState>()(
         set((state) => {
           state.connectionSettings = { ...state.connectionSettings, ...settings };
           // Clear related errors when settings change
-          if (settings.ph_child_parent_url !== undefined) {
+          if (settings.surefeedback_parent_url !== undefined) {
             delete state.errors.parent_url;
           }
-          if (settings.ph_child_access_token !== undefined) {
+          if (settings.surefeedback_access_token !== undefined) {
             delete state.errors.access_token;
           }
         }),
@@ -226,11 +226,11 @@ export const useOnboardingStore = create<OnboardingState>()(
           case 2: // Connection setup
             const errors: Record<string, string> = {};
             
-            if (!connectionSettings.ph_child_parent_url) {
+            if (!connectionSettings.surefeedback_parent_url) {
               errors.parent_url = 'Parent URL is required';
             }
             
-            if (!connectionSettings.ph_child_access_token) {
+            if (!connectionSettings.surefeedback_access_token) {
               errors.access_token = 'Access token is required';
             }
 

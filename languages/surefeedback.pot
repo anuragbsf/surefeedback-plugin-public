@@ -25,161 +25,161 @@ msgstr ""
 "X-Textdomain-Support: yes\n"
 "X-Generator: grunt-wp-i18n 1.0.4\n"
 
-#: includes/api/class-ph-child-rest-api.php:43
+#: includes/api/class-surefeedback-rest-api.php:43
 msgid "Access token required"
 msgstr ""
 
-#: includes/api/class-ph-child-rest-api.php:46
+#: includes/api/class-surefeedback-rest-api.php:46
 msgid "Invalid access token"
 msgstr ""
 
-#: includes/core/ph-child-functions.php:112
+#: includes/core/surefeedback-functions.php:112
 msgid ""
 "Flywheel hosting detected!  You'll need to request a cache exclusion in "
 "order for project access links to work correctly."
 msgstr ""
 
-#: includes/core/ph-child-functions.php:138
+#: includes/core/surefeedback-functions.php:138
 msgid ""
 "WPEngine hosting detected!  You'll need to request a cache exclusion in "
 "order for SureFeedback access links to work properly."
 msgstr ""
 
-#: ph-child.php:78
+#: surefeedback.php:78
 msgid "Website project ID."
 msgstr ""
 
-#: ph-child.php:82
+#: surefeedback.php:82
 msgid "Public API key for the script loader."
 msgstr ""
 
-#: ph-child.php:86
+#: surefeedback.php:86
 msgid "Access token to verify access to be able to register and leave comments."
 msgstr ""
 
-#: ph-child.php:90
+#: surefeedback.php:90
 msgid "Parent Site URL."
 msgstr ""
 
-#: ph-child.php:94
+#: surefeedback.php:94
 msgid "Secret signature to verify identity."
 msgstr ""
 
-#: ph-child.php:98
+#: surefeedback.php:98
 msgid "Is the plugin installed?"
 msgstr ""
 
-#: ph-child.php:204
+#: surefeedback.php:204
 msgid ""
 "You have both the client site and SureFeedback core plugins activated. You "
 "must only activate the client site on a client site, and SureFeedback on "
 "your main site."
 msgstr ""
 
-#: ph-child.php:231
+#: surefeedback.php:231
 msgid "Visit plugin site"
 msgstr ""
 
-#: ph-child.php:292
+#: surefeedback.php:292
 msgid "Settings"
 msgstr ""
 
-#: ph-child.php:390
+#: surefeedback.php:390
 msgid "Feedback Connection"
 msgstr ""
 
-#: ph-child.php:391
+#: surefeedback.php:391
 msgid "SureFeedback"
 msgstr ""
 
-#: ph-child.php:406
+#: surefeedback.php:406
 msgid "General Settings"
 msgstr ""
 
-#: ph-child.php:413
+#: surefeedback.php:413
 msgid "Comments Visibility Access"
 msgstr ""
 
-#: ph-child.php:429
+#: surefeedback.php:429
 msgid "Allow Site Visitors"
 msgstr ""
 
-#: ph-child.php:447
+#: surefeedback.php:447
 msgid "Dashboard Commenting"
 msgstr ""
 
-#: ph-child.php:465
+#: surefeedback.php:465
 msgid "Connection"
 msgstr ""
 
-#: ph-child.php:472
+#: surefeedback.php:472
 msgid "Connection Status"
 msgstr ""
 
-#: ph-child.php:490
+#: surefeedback.php:490
 msgid "Manual Connection Details"
 msgstr ""
 
-#: ph-child.php:509
+#: surefeedback.php:509
 msgid "White Label"
 msgstr ""
 
-#: ph-child.php:516
+#: surefeedback.php:516
 msgid "Plugin Name"
 msgstr ""
 
-#: ph-child.php:525
+#: surefeedback.php:525
 msgid "Plugin Description"
 msgstr ""
 
-#: ph-child.php:534
+#: surefeedback.php:534
 msgid "Plugin Author"
 msgstr ""
 
-#: ph-child.php:543
+#: surefeedback.php:543
 msgid "Plugin Author URL"
 msgstr ""
 
-#: ph-child.php:552
+#: surefeedback.php:552
 msgid "Plugin Link"
 msgstr ""
 
-#: ph-child.php:702
+#: surefeedback.php:702
 msgid "Allow above user roles to view comments on your site without access token."
 msgstr ""
 
-#: ph-child.php:717
+#: surefeedback.php:717
 msgid ""
 "Allow the site visitors to view and add comments on your site without "
 "access token."
 msgstr ""
 
-#: ph-child.php:729
+#: surefeedback.php:729
 msgid "Allow commenting in your site's WordPress dashboard area."
 msgstr ""
 
-#: ph-child.php:774
+#: surefeedback.php:774
 #. translators: %s: parent site URL
 msgid "Connected to %s"
 msgstr ""
 
-#: ph-child.php:784
+#: surefeedback.php:784
 msgid "Disconnect"
 msgstr ""
 
-#: ph-child.php:786
+#: surefeedback.php:786
 msgid "Visit Dashboard Site"
 msgstr ""
 
-#: ph-child.php:791
+#: surefeedback.php:791
 msgid "Not Connected. Please connect this plugin to your Feedback installation."
 msgstr ""
 
-#: ph-child.php:816
+#: surefeedback.php:816
 msgid "Need Help?"
 msgstr ""
 
-#: ph-child.php:830
+#: surefeedback.php:830
 msgid ""
 "If you are having trouble connecting, you can manually connect by pasting "
 "the connection details below"

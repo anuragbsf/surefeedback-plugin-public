@@ -51,7 +51,7 @@ const GeneralSettings = () => {
     setIsLoading(false);
     
     if (success) {
-      toast.success(__('Settings saved successfully!', 'ph-child'));
+      toast.success(__('Settings saved successfully!', 'surefeedback'));
     }
   };
 
@@ -62,10 +62,10 @@ const GeneralSettings = () => {
         iconPosition="right"
         size="sm"
         tag="h2"
-        title={__("General Settings", "ph-child")}
+        title={__("General Settings", "surefeedback")}
         description={__(
           "Configure user permissions and commenting features",
-          "ph-child"
+          "surefeedback"
         )}
       />
       <div
@@ -77,12 +77,12 @@ const GeneralSettings = () => {
       >
         <div className="flex flex-col">
           <Title
-            // description={__('Select user roles that can access debug options. Admins are always enabled', 'ph_child')}
+            // description={__('Select user roles that can access debug options. Admins are always enabled', 'surefeedback')}
             icon={null}
             iconPosition="right"
             size="xs"
             tag="h2"
-            title={__("User Permissions", "ph-child")}
+            title={__("User Permissions", "surefeedback")}
           />
           <div
             style={{ marginTop: "15px" }}
@@ -93,7 +93,7 @@ const GeneralSettings = () => {
                 <input
                   type="checkbox"
                   className="role-checkbox uavc-remove-ring"
-                  checked={settings.general.ph_child_role_can_comment.includes(role.name)}
+                  checked={settings.general.surefeedback_role_can_comment.includes(role.name)}
                   onChange={(e) => handleRoleChange(role.name, e.target.checked)}
                 />
                 <span className="text-sm">{role.label}</span>
@@ -112,13 +112,13 @@ const GeneralSettings = () => {
         >
           <Container.Item className="shrink flex flex-col mt-6 space-y-1">
             <div className="text-base font-semibold m-0 mb-2">
-              {__("Guest Comments", "ph-child")}
+              {__("Guest Comments", "surefeedback")}
             </div>
             <div
               style={{ color: "#9CA3AF" }}
               className="text-sm font-normal m-0"
             >
-              {__("Allow non-logged in visitors to view and add comments", "ph-child")}
+              {__("Allow non-logged in visitors to view and add comments", "surefeedback")}
             </div>
           </Container.Item>
           <Container.Item
@@ -129,7 +129,7 @@ const GeneralSettings = () => {
           >
             <Switch
               size="md"
-              value={settings.general.ph_child_guest_comments_enabled}
+              value={settings.general.surefeedback_guest_comments_enabled}
               onChange={handleGuestCommentsChange}
             />
           </Container.Item>
@@ -155,13 +155,13 @@ const GeneralSettings = () => {
         >
           <Container.Item className="shrink flex flex-col space-y-1">
             <div className="text-base font-semibold m-0 mb-2">
-              {__("Admin Area Comments", "ph-child")}
+              {__("Admin Area Comments", "surefeedback")}
             </div>
             <div
               style={{ color: "#9CA3AF" }}
               className="text-sm font-normal m-0"
             >
-              {__("Enable commenting on WordPress admin pages", "ph-child")}
+              {__("Enable commenting on WordPress admin pages", "surefeedback")}
             </div>
           </Container.Item>
           <Container.Item
@@ -172,7 +172,7 @@ const GeneralSettings = () => {
           >
             <Switch
               size="md"
-              value={settings.general.ph_child_admin}
+              value={settings.general.surefeedback_admin}
               onChange={handleAdminCommentsChange}
             />
           </Container.Item>
@@ -203,7 +203,7 @@ const GeneralSettings = () => {
           disabled={saving || isLoading}
         >
           {(saving || isLoading) && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-          {__("Save Changes", "ph-child")}
+          {__("Save Changes", "surefeedback")}
         </Button>
        </div>
       </div>
