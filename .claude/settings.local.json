@@ -11,7 +11,8 @@
       "Read(//Users/akshayurankar/**)",
       "Bash(find:*)",
       "Bash(composer lint:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": [],
