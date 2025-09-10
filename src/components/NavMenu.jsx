@@ -95,28 +95,6 @@ const NavMenu = () => {
 						<Topbar.Item>
 							<nav className="flex flex-wrap gap-6 mt-2 md:mt-0 cursor-pointer">
 								<Link
-									to={routes.dashboard.path}
-									className={`${
-										isActive("dashboard")
-											? "active-link"
-											: ""
-									}`}
-									style={linkStyle("dashboard")}
-								>
-									{__("Dashboard", "surefeedback")}
-								</Link>
-								<Link
-									to={routes.settings.path}
-									className={`${
-										isActive("settings")
-											? "active-link"
-											: ""
-									}`}
-									style={linkStyle("settings")}
-								>
-									{__("Settings", "surefeedback")}
-								</Link>
-								<Link
 									to={routes.connection.path}
 									className={`${
 										isActive("connection") ? "active-link" : ""
@@ -127,6 +105,28 @@ const NavMenu = () => {
 										"Connections",
 										"surefeedback"
 									)}
+								</Link>
+								<Link
+									to={routes.settings.path}
+									className={`${
+										isActive("settings")
+											? "active-link"
+											: ""
+									}`}
+									style={linkStyle("settings")}
+								>
+									{__("Permissions", "surefeedback")}
+								</Link>
+								<Link
+									to={routes.dashboard.path}
+									className={`${
+										isActive("dashboard")
+											? "active-link"
+											: ""
+									}`}
+									style={linkStyle("dashboard")}
+								>
+									{__("Settings", "surefeedback")}
 								</Link>
 							</nav>
 						</Topbar.Item>

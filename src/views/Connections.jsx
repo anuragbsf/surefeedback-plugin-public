@@ -2,6 +2,7 @@ import React from 'react'
 import NavMenu from '../components/NavMenu'
 import { Container } from "@bsf/force-ui";
 import ConnectionCard  from './ConnectionCard.jsx'
+import WhiteLabel from './WhiteLabel.jsx';
 
 const Connections = () => {
   return (
