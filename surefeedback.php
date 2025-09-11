@@ -545,6 +545,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'surecart_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surecart.svg',
 						'sureforms_icon'   => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/sureforms.svg',
 						'presto_player_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/pplayer.svg',
+						'surefeedback_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surefeedback.svg',
+						'welcome' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome.png',
+						'welcome_background' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome_background.png',
 						'suretriggers_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/OttoKit-Symbol-Primary.svg',
 					)
 				);

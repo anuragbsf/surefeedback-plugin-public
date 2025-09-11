@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import OB from './index'
 
 const SetupWizard = () => {
   useEffect(() => {
@@ -11,7 +12,9 @@ const SetupWizard = () => {
   }, [])
 
   return (
-    <div>SetupWizard</div>
+    <>
+      <OB />
+    </>
   )
 }
 
