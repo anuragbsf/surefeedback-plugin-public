@@ -546,7 +546,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'sureforms_icon'   => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/sureforms.svg',
 						'presto_player_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/pplayer.svg',
 						'surefeedback_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surefeedback.svg',
+						'thumbs' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/thumbs.svg',
+						'rocket' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/rocket.svg',
+						'admin' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/admin.svg',
+						'docs' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/docs.svg',
 						'welcome' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome.png',
+						'footer' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/footer.png',
 						'welcome_background' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome_background.png',
 						'suretriggers_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/OttoKit-Symbol-Primary.svg',
 					)
