@@ -46,14 +46,12 @@ const WhiteLabel = () => {
     }
   };
   return (
-    <div className="rounded-lg">
+    <div className="rounded-lg" style={{  width: "720px",
+          marginLeft: "40px", }}>
       <div
         className="flex flex-row items-center justify-between"
         style={{
-          paddingBottom: "24px",
           borderRadius: "8px",
-          width: "720px",
-          marginLeft: "40px",
         }}
       ></div>
 

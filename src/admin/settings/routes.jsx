@@ -11,4 +11,7 @@ export const routes = {
     upgrade: {
         path: "upgrade",
     },
+    setupWizard: {
+        path: "setup-wizard",
+    },
 }

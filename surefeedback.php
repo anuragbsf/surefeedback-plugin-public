@@ -559,6 +559,17 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				);
 			}
 			
+			// Enqueue admin dashboard custom styles
+			$dashboard_css = SUREFEEDBACK_PLUGIN_DIR . 'assets/admin-dashboard.css';
+			if ( file_exists( $dashboard_css ) ) {
+				wp_enqueue_style(
+					'surefeedback-dashboard-custom',
+					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-dashboard.css',
+					array(),
+					filemtime( $dashboard_css )
+				);
+			}
+			
 			// Enqueue WordPress admin styles
 			wp_enqueue_style( 'common' );
 			wp_enqueue_style( 'forms' );
@@ -579,6 +590,17 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-menu.css',
 					array(),
 					filemtime( $menu_css )
+				);
+			}
+			
+			// Enqueue admin dashboard styles on all admin pages
+			$dashboard_css = SUREFEEDBACK_PLUGIN_DIR . 'assets/admin-dashboard.css';
+			if ( file_exists( $dashboard_css ) ) {
+				wp_enqueue_style(
+					'surefeedback-dashboard-styles',
+					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-dashboard.css',
+					array(),
+					filemtime( $dashboard_css )
 				);
 			}
 		}
