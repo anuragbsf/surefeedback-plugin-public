@@ -2,7 +2,7 @@ import React from 'react'
 import NavMenu from '../components/NavMenu'
 import { Container } from "@bsf/force-ui";
 import ConnectionCard  from './ConnectionCard.jsx'
-import WhiteLabel from './WhiteLabel.jsx';
+import Connected from './Connected.jsx';
 
 const Connections = () => {
   return (
@@ -24,7 +24,8 @@ const Connections = () => {
                         className="p-2 w-full"
                         shrink={1}
                     >
-                      <ConnectionCard  />
+                      {/* <ConnectionCard  /> */}
+                      <Connected/>
                     </Container.Item>
                 </Container>
       </div>
