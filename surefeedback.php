@@ -114,18 +114,24 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			add_action( 'wp_footer', array( $this, 'ph_user_data' ) );
 
 			// show script on front end and maybe admin.
-			if ( ! is_admin() ) {
-				add_action( 'wp_footer', array( $this, 'script' ) );
-			}
-			if ( get_option( 'surefeedback_admin', false ) ) {
-				add_action( 'admin_footer', array( $this, 'script' ) );
-			}
+			// if ( ! is_admin() ) {
+			// 	add_action( 'wp_footer', array( $this, 'script' ) );
+			// }
+			// if ( get_option( 'surefeedback_admin', false ) ) {
+			// 	add_action( 'admin_footer', array( $this, 'script' ) );
+			// }
 
 			// whitelist our blog options.
 			add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
 
 			// maybe disconnect from parent site.
 			add_action( 'admin_init', array( $this, 'maybe_disconnect' ) );
+
+			// handle connection callback from SureFeedback
+			add_action( 'admin_init', array( $this, 'handle_connection_callback' ) );
+
+			// inject widget script on frontend for connected sites
+			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
 
 			// remove disconnect args after successful disconnect.
 			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
@@ -152,7 +158,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				add_filter( 'plugin_row_meta', array( $this, 'white_label_link' ), 10, 4 );
 			}
 
-			add_filter( 'ph_script_should_start_loading', array( $this, 'compatiblity_blacklist' ) );
+			// add_filter( 'ph_script_should_start_loading', array( $this, 'compatiblity_blacklist' ) );
 		}
 
 		/**
@@ -534,6 +540,23 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
 						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
+						// Connection data for auth.js
+						'connection' => array(
+							'app_url'          => 'http://localhost:3000',
+							'callback_url'     => admin_url('admin.php?page=surefeedback&action=callback'),
+							'site_data' => array(
+								'domain'           => parse_url(home_url(), PHP_URL_HOST),
+								'site_name'        => get_bloginfo('name'),
+								'site_url'         => home_url(),
+								'admin_email'      => get_option('admin_email'),
+								'wp_version'       => get_bloginfo('version'),
+								'plugin_version'   => defined('SUREFEEDBACK_VERSION') ? SUREFEEDBACK_VERSION : '1.0.0',
+								'language'         => get_locale(),
+								'timezone'         => get_option('timezone_string') ?: 'UTC',
+								'theme'            => get_template(),
+								'active_plugins'   => count(get_option('active_plugins', [])),
+							)
+						),
 						'icon_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/project-huddle-icon.png',
 						'welcome_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/Video player.png',
 						'settings_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/settings_unselected.svg',
@@ -1097,6 +1120,161 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				<p class="surefeedback-manual-connection"><?php esc_html_e( 'If you are having trouble connecting, you can manually connect by pasting the connection details below', 'surefeedback' ); ?></p><br>
 				<textarea name="surefeedback_manual_connection" style="width:500px;height:300px"></textarea>
 				<?php
+		}
+
+		/**
+		 * Handle connection callback from SureFeedback app
+		 *
+		 * @return void
+		 */
+		public function handle_connection_callback() {
+			// Only handle on admin pages with our action parameter
+			if ( ! is_admin() || ! isset( $_GET['action'] ) || $_GET['action'] !== 'callback' ) {
+				return;
+			}
+
+			// Check if this is our callback page
+			if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'surefeedback' ) {
+				return;
+			}
+
+			// Verify we have the required parameters
+			if ( ! isset( $_GET['success'], $_GET['state'], $_GET['site_token'], $_GET['site_id'], $_GET['organization_id'] ) ) {
+				return;
+			}
+
+			// Sanitize the parameters
+			$success = sanitize_text_field( wp_unslash( $_GET['success'] ) );
+			$state = sanitize_text_field( wp_unslash( $_GET['state'] ) );
+			$site_token = sanitize_text_field( wp_unslash( $_GET['site_token'] ) );
+			$site_id = sanitize_text_field( wp_unslash( $_GET['site_id'] ) );
+			$organization_id = sanitize_text_field( wp_unslash( $_GET['organization_id'] ) );
+
+			// Check if connection was successful
+			if ( $success === '1' ) {
+				// Save connection data
+				update_option( 'surefeedback_id', $site_id );
+				update_option( 'surefeedback_api_key', $site_token );
+				update_option( 'surefeedback_access_token', $site_token );
+				update_option( 'surefeedback_parent_url', 'http://localhost:3000' );
+				update_option( 'surefeedback_signature', hash_hmac( 'sha256', get_option( 'admin_email' ), $site_token ) );
+				update_option( 'surefeedback_organization_id', $organization_id );
+				update_option( 'surefeedback_state_token', '' ); // Clear state token
+
+				// Set success message
+				add_action( 'admin_notices', array( $this, 'connection_success_notice' ) );
+				
+				// Remove callback parameters from URL to clean it up
+				wp_safe_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) );
+				exit;
+			} else {
+				// Handle connection failure
+				add_action( 'admin_notices', array( $this, 'connection_error_notice' ) );
+			}
+		}
+
+		/**
+		 * Display connection success notice
+		 *
+		 * @return void
+		 */
+		public function connection_success_notice() {
+			?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php esc_html_e( 'Successfully connected to SureFeedback! Your site is now ready to collect feedback.', 'surefeedback' ); ?></p>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Display connection error notice
+		 *
+		 * @return void
+		 */
+		public function connection_error_notice() {
+			?>
+			<div class="notice notice-error is-dismissible">
+				<p><?php esc_html_e( 'Connection to SureFeedback failed. Please try again.', 'surefeedback' ); ?></p>
+			</div>
+			<?php
+		}
+
+		/**
+		 * Inject SureFeedback widget script on frontend for connected sites
+		 *
+		 * @return void
+		 */
+		public function inject_widget_script() {
+			// Only inject on frontend, not in admin
+			if ( is_admin() ) {
+				return;
+			}
+
+			// Check if site is connected
+			$site_id = get_option( 'surefeedback_id' );
+			$api_key = get_option( 'surefeedback_api_key' );
+			$parent_url = get_option( 'surefeedback_parent_url' );
+			$token =  get_option( 'surefeedback_access_token' );
+
+			// Debug: Add console logging to help troubleshoot
+			?>
+			<script>
+			console.log('SureFeedback Debug: Connection check', {
+				site_id: '<?php echo esc_js( $site_id ); ?>',
+				api_key: '<?php echo esc_js( $api_key ? 'present' : 'missing' ); ?>',
+				parent_url: '<?php echo esc_js( $parent_url ); ?>',
+				token: '<?php echo esc_js( $token ? 'present' : 'missing' ); ?>'
+			});
+			</script>
+			<?php
+
+			if ( ! $site_id || ! $api_key || ! $parent_url || ! $token ) {
+				?>
+				<script>
+				console.warn('SureFeedback: Widget not loaded - missing connection data');
+				</script>
+				<?php
+				return;
+			}
+
+			// Check blacklist (don't show on page builders, etc.)
+			// if ( $this->compatiblity_blacklist() ) {
+			// 	return;
+			// }
+
+			// Inject the SureFeedback widget script
+			?>
+			 <script>
+			// SureFeedback WordPress Integration Script
+			(function (d, t, g, defaultToken, baseUrl, debug, restrictedUrl, requiredToken) {
+			'use strict';
+			var sf = d.createElement(t),
+				s = d.getElementsByTagName(t)[0];
+			
+			sf.type = 'text/javascript';
+			sf.async = true;
+			sf.defer = true;
+			sf.charset = 'UTF-8';
+			sf.src = g + '?v=' + (new Date()).getTime();
+			sf.setAttribute('data-default-token', defaultToken);
+			sf.setAttribute('data-base-url', baseUrl || 'http://localhost:8000');
+			sf.setAttribute('data-debug', debug || 'false');
+			sf.setAttribute('data-mode', 'iframe');
+			sf.setAttribute('data-platform', 'wordpress');
+			
+			// Optional: Add restricted URL and required token if provided
+			if (restrictedUrl) {
+				sf.setAttribute('data-restricted-url', restrictedUrl);
+			}
+			if (requiredToken) {
+				sf.setAttribute('data-required-token', requiredToken);
+			}
+			
+			s.parentNode.insertBefore(sf, s);
+			})(document, 'script', 'http://localhost:8000/js/widget-loader.js', '<?php echo esc_js( $token ); ?>' , 'http://localhost:8000', 'false', null, null);
+			</script>
+					
+			<?php
 		}
 
 		// Add custom js.
