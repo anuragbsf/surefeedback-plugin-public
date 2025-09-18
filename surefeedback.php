@@ -56,6 +56,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 	 */
 	final class SureFeedback {
 
+		/**
+		 * Instance of this class
+		 *
+		 * @var SureFeedback
+		 */
+		private static $instance;
 
 		/**
 		 * Make sure to whitelist our option names
@@ -63,6 +69,18 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @var array
 		 */
 		protected $whitelist_option_names = array();
+
+		/**
+		 * Get instance of this class
+		 *
+		 * @return SureFeedback
+		 */
+		public static function get_instance() {
+			if ( null === self::$instance ) {
+				self::$instance = new self();
+			}
+			return self::$instance;
+		}
 
 		/**
 		 * Get things going
@@ -132,6 +150,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 
 			// inject widget script on frontend for connected sites
 			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
+
+			// handle automatic verification
+			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
 
 			// remove disconnect args after successful disconnect.
 			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
@@ -1147,19 +1168,34 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			$success = sanitize_text_field( wp_unslash( $_GET['success'] ) );
 			$state = sanitize_text_field( wp_unslash( $_GET['state'] ) );
 			$site_token = sanitize_text_field( wp_unslash( $_GET['site_token'] ) );
+			$script_token = isset( $_GET['script_token'] ) ? sanitize_text_field( wp_unslash( $_GET['script_token'] ) ) : '';
 			$site_id = sanitize_text_field( wp_unslash( $_GET['site_id'] ) );
 			$organization_id = sanitize_text_field( wp_unslash( $_GET['organization_id'] ) );
+			$site_name = isset( $_GET['site_name'] ) ? sanitize_text_field( wp_unslash( $_GET['site_name'] ) ) : '';
+			$domain = isset( $_GET['domain'] ) ? sanitize_text_field( wp_unslash( $_GET['domain'] ) ) : '';
+			$integration_script = isset( $_GET['integration_script'] ) ? urldecode( wp_kses_post( wp_unslash( $_GET['integration_script'] ) ) ) : '';
+			$script_instructions = isset( $_GET['script_instructions'] ) ? sanitize_textarea_field( wp_unslash( $_GET['script_instructions'] ) ) : '';
 
 			// Check if connection was successful
 			if ( $success === '1' ) {
-				// Save connection data
+				// Save connection data - now with proper SaaS integration
 				update_option( 'surefeedback_id', $site_id );
 				update_option( 'surefeedback_api_key', $site_token );
-				update_option( 'surefeedback_access_token', $site_token );
-				update_option( 'surefeedback_parent_url', 'http://localhost:3000' );
+				update_option( 'surefeedback_access_token', $script_token ?: $site_token );
+				update_option( 'surefeedback_script_token', $script_token );
+				update_option( 'surefeedback_parent_url', 'http://localhost:8000' );
 				update_option( 'surefeedback_signature', hash_hmac( 'sha256', get_option( 'admin_email' ), $site_token ) );
 				update_option( 'surefeedback_organization_id', $organization_id );
+				update_option( 'surefeedback_site_name', $site_name );
+				update_option( 'surefeedback_domain', $domain );
+				update_option( 'surefeedback_integration_script', $integration_script );
+				update_option( 'surefeedback_script_instructions', $script_instructions );
+				update_option( 'surefeedback_connected_at', current_time( 'mysql' ) );
+				update_option( 'surefeedback_installed', true );
 				update_option( 'surefeedback_state_token', '' ); // Clear state token
+
+				// Auto-verify script integration after connection
+				$this->auto_verify_and_generate_magic_link();
 
 				// Set success message
 				add_action( 'admin_notices', array( $this, 'connection_success_notice' ) );
@@ -1179,9 +1215,84 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function connection_success_notice() {
+			$verification_status = get_option( 'surefeedback_verification_status' );
+			$magic_link = get_option( 'surefeedback_magic_link' );
+			$verification_data = get_option( 'surefeedback_verification_data' );
+			$site_name = get_option( 'surefeedback_site_name' );
+			
 			?>
 			<div class="notice notice-success is-dismissible">
 				<p><?php esc_html_e( 'Successfully connected to SureFeedback! Your site is now ready to collect feedback.', 'surefeedback' ); ?></p>
+				
+				<?php if ( $verification_status === 'verified' && $magic_link ) : ?>
+					<!-- Same success display as SaaS dashboard VerificationStep.tsx -->
+					<div style="padding: 10px; border-left: 4px solid #46d369; background-color: #f0fdf4;">
+						<p style="margin: 0; color: #15803d;">
+							<strong>✅ <?php esc_html_e( 'Integration Verified Successfully!', 'surefeedback' ); ?></strong>
+						</p>
+						<?php if ( $verification_data ) : 
+							$verification = json_decode( $verification_data, true );
+							if ( $verification ) : ?>
+								<p style="margin: 5px 0 10px 0; font-size: 12px; color: #15803d;">
+									<?php printf( 
+										esc_html__( 'Last verified: %s | Domain: %s', 'surefeedback' ),
+										isset( $verification['last_seen'] ) ? esc_html( $verification['last_seen'] ) : esc_html__( 'just now', 'surefeedback' ),
+										isset( $verification['client_domain'] ) ? esc_html( $verification['client_domain'] ) : esc_html( get_site_url() )
+									); ?>
+								</p>
+							<?php endif; ?>
+						<?php endif; ?>
+						
+						<a href="<?php echo esc_url( $magic_link ); ?>" target="_blank" class="button button-primary" style="margin-top: 5px;">
+							🔗 <?php esc_html_e( 'Open SureFeedback Dashboard', 'surefeedback' ); ?>
+						</a>
+					</div>
+					
+				<?php elseif ( $verification_status === 'failed' ) : ?>
+					<!-- Same error display as SaaS dashboard VerificationStep.tsx -->
+					<div style="padding: 10px; border-left: 4px solid #ef4444; background-color: #fef2f2;">
+						<p style="margin: 0; color: #dc2626;">
+							<strong>❌ <?php esc_html_e( 'Integration verification failed', 'surefeedback' ); ?></strong>
+						</p>
+						<p style="margin: 5px 0 0 0; font-size: 12px; color: #dc2626;">
+							<?php esc_html_e( 'The widget script may not be loading correctly on your website. Please check your site and try again.', 'surefeedback' ); ?>
+						</p>
+					</div>
+					
+				<?php elseif ( $verification_status === 'pending' ) : ?>
+					<!-- Same checking display as SaaS dashboard VerificationStep.tsx -->
+					<div style="padding: 10px; border-left: 4px solid #3b82f6; background-color: #eff6ff;">
+						<p style="margin: 0; color: #1d4ed8;">
+							<strong>🔄 <?php esc_html_e( 'Verifying integration...', 'surefeedback' ); ?></strong>
+						</p>
+						<p style="margin: 5px 0 0 0; font-size: 12px; color: #1d4ed8;">
+							<?php esc_html_e( 'Please wait while we verify that the widget is loading correctly on your website.', 'surefeedback' ); ?>
+						</p>
+						<script>
+						// Auto-refresh page after 45 seconds to show verification results (same as SaaS dashboard)
+						setTimeout(function() {
+							window.location.reload();
+						}, 45000);
+						</script>
+					</div>
+					
+				<?php else : ?>
+					<!-- Initial verification state -->
+					<div style="padding: 10px; border-left: 4px solid #f59e0b; background-color: #fffbeb;">
+						<p style="margin: 0; color: #92400e;">
+							<strong>⏳ <?php esc_html_e( 'Starting verification...', 'surefeedback' ); ?></strong>
+						</p>
+						<p style="margin: 5px 0 0 0; font-size: 12px; color: #92400e;">
+							<?php esc_html_e( 'Integration verification will begin shortly. This page will refresh automatically with results.', 'surefeedback' ); ?>
+						</p>
+						<script>
+						// Auto-refresh page after 35 seconds to check verification results
+						setTimeout(function() {
+							window.location.reload();
+						}, 35000);
+						</script>
+					</div>
+				<?php endif; ?>
 			</div>
 			<?php
 		}
@@ -1210,28 +1321,57 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				return;
 			}
 
-			// Check if site is connected
+			// Check if site is connected and has proper tokens
 			$site_id = get_option( 'surefeedback_id' );
-			$api_key = get_option( 'surefeedback_api_key' );
+			$script_token = get_option( 'surefeedback_script_token' );
+			$access_token = get_option( 'surefeedback_access_token' );
 			$parent_url = get_option( 'surefeedback_parent_url' );
-			$token =  get_option( 'surefeedback_access_token' );
+			$integration_script = get_option( 'surefeedback_integration_script' );
 
 			// Debug: Add console logging to help troubleshoot
 			?>
 			<script>
 			console.log('SureFeedback Debug: Connection check', {
 				site_id: '<?php echo esc_js( $site_id ); ?>',
-				api_key: '<?php echo esc_js( $api_key ? 'present' : 'missing' ); ?>',
+				script_token: '<?php echo esc_js( $script_token ? 'present' : 'missing' ); ?>',
+				access_token: '<?php echo esc_js( $access_token ? 'present' : 'missing' ); ?>',
 				parent_url: '<?php echo esc_js( $parent_url ); ?>',
-				token: '<?php echo esc_js( $token ? 'present' : 'missing' ); ?>'
+				integration_script: '<?php echo esc_js( $integration_script ? 'present' : 'missing' ); ?>'
 			});
 			</script>
 			<?php
 
-			if ( ! $site_id || ! $api_key || ! $parent_url || ! $token ) {
+			if ( ! $site_id || ! $parent_url ) {
 				?>
 				<script>
 				console.warn('SureFeedback: Widget not loaded - missing connection data');
+				</script>
+				<?php
+				return;
+			}
+
+			// Prefer integration script from SaaS platform if available
+			// if ( ! empty( $integration_script ) ) {
+			// 	// Decode the script properly and output as raw HTML (trusted source - our own SaaS platform)
+			// 	$decoded_script = urldecode( $integration_script );
+				
+			// 	// Debug logging to check what we're outputting
+			 	?>
+			
+				<?php
+				
+			// 	// Since this is trusted content from our own SaaS platform, output it directly
+			// 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			// 	echo $decoded_script;
+			// 	return;
+			// }
+
+			// Fallback to manual script injection if no integration script
+			$token = $script_token ?: $access_token;
+			if ( ! $token ) {
+				?>
+				<script>
+				console.warn('SureFeedback: No valid tokens available');
 				</script>
 				<?php
 				return;
@@ -1242,12 +1382,23 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// 	return;
 			// }
 
-			// Inject the SureFeedback widget script
+			// Inject the SureFeedback widget script - corrected path and configuration
 			?>
-			 <script>
-			// SureFeedback WordPress Integration Script
+			<!-- SureFeedback Widget -->
+			<script>
+			// SureFeedback WordPress Integration Script (Fallback Mode)
 			(function (d, t, g, defaultToken, baseUrl, debug, restrictedUrl, requiredToken) {
 			'use strict';
+			
+			// Set token in localStorage before widget-loader.js runs
+			// This allows widget-loader.js to find the token since it checks localStorage
+			try {
+				localStorage.setItem('surefeedback_api_token', defaultToken);
+				localStorage.setItem('surefeedback_token_timestamp', Date.now().toString());
+			} catch (e) {
+				console.warn('SureFeedback: Could not set localStorage token:', e);
+			}
+			
 			var sf = d.createElement(t),
 				s = d.getElementsByTagName(t)[0];
 			
@@ -1257,10 +1408,13 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			sf.charset = 'UTF-8';
 			sf.src = g + '?v=' + (new Date()).getTime();
 			sf.setAttribute('data-default-token', defaultToken);
-			sf.setAttribute('data-base-url', baseUrl || 'http://localhost:8000');
+			sf.setAttribute('data-base-url', baseUrl);
 			sf.setAttribute('data-debug', debug || 'false');
 			sf.setAttribute('data-mode', 'iframe');
 			sf.setAttribute('data-platform', 'wordpress');
+			sf.setAttribute('data-site-url', window.location.href);
+			sf.setAttribute('data-site-origin', window.location.origin);
+			sf.setAttribute('data-site-domain', window.location.hostname);
 			
 			// Optional: Add restricted URL and required token if provided
 			if (restrictedUrl) {
@@ -1271,10 +1425,303 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			}
 			
 			s.parentNode.insertBefore(sf, s);
-			})(document, 'script', 'http://localhost:8000/js/widget-loader.js', '<?php echo esc_js( $token ); ?>' , 'http://localhost:8000', 'false', null, null);
+			console.log('SureFeedback: Token set in localStorage and script injected');
+			console.log('SureFeedback: Token:', defaultToken);
+			console.log('SureFeedback: Base URL:', baseUrl);
+			console.log('SureFeedback: Script src:', sf.src);
+			console.log('SureFeedback: LocalStorage token:', localStorage.getItem('surefeedback_api_token'));
+			
+			// Debug: Check URL parameters that widget-loader.js will look for
+			const urlParams = new URLSearchParams(window.location.search);
+			console.log('SureFeedback: URL Parameters Check:', {
+				api_token: urlParams.get('api_token'),
+				magic_token: urlParams.get('magic_token'), 
+				surefeedback_token: urlParams.get('surefeedback_token'),
+				current_url: window.location.href
+			});
+			
+			// Debug: Set up listener for widget ready event
+			window.addEventListener('surefeedback:ready', function() {
+				console.log('SureFeedback: Widget ready event fired - widget is fully loaded');
+			});
+			
+			// Debug: Check if widget loads after 3 seconds
+			setTimeout(function() {
+				console.log('SureFeedback: Status check after 3s:', {
+					iframe_ready: window.SureFeedbackIframeReady,
+					widget_loaded: window.SureFeedbackWidget ? 'yes' : 'no',
+					verification_data: window.SureFeedbackVerification || 'none'
+				});
+			}, 3000);
+			})(document, 'script', '<?php echo esc_js( $parent_url ); ?>/js/widget-loader.js', '<?php echo esc_js( $token ); ?>', '<?php echo esc_js( $parent_url ); ?>', 'true', null, null);
 			</script>
-					
+			<!-- End SureFeedback Widget -->
 			<?php
+		}
+
+		/**
+		 * Auto-verify script and generate magic link after connection
+		 *
+		 * @return void
+		 */
+		public function auto_verify_and_generate_magic_link() {
+			// Schedule verification after a short delay to allow script injection
+			wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
+		}
+
+		/**
+		 * Perform automatic verification and generate magic link
+		 * Follows the same logic as SaaS dashboard IntegrationStep.tsx polling
+		 *
+		 * @return void
+		 */
+		public function perform_auto_verification() {
+			// Verify script integration (same as SaaS dashboard polling)
+			$verification_result = $this->verify_script_integration();
+			
+			// Check verification status (same logic as IntegrationStep.tsx line 110-114)
+			$verified = $verification_result['success'] && $verification_result['verified'];
+			
+			if ( $verified ) {
+				// Script is verified, now generate magic link (same as SaaS dashboard)
+				$magic_link_result = $this->generate_magic_link();
+				
+				if ( $magic_link_result['success'] ) {
+					// Store magic link for admin display (same as SaaS dashboard)
+					update_option( 'surefeedback_magic_link', $magic_link_result['redirect_url'] );
+					update_option( 'surefeedback_magic_link_expires', $magic_link_result['expires_at'] );
+					update_option( 'surefeedback_verification_status', 'verified' );
+					
+					// Store verification details for admin display
+					if ( isset( $verification_result['verification'] ) ) {
+						update_option( 'surefeedback_verification_data', wp_json_encode( $verification_result['verification'] ) );
+					}
+					
+					// Log success
+					error_log( 'SureFeedback: Auto-verification completed and magic link generated successfully' );
+				} else {
+					// Log magic link generation failure but still mark as verified
+					error_log( 'SureFeedback: Verification successful but magic link generation failed: ' . $magic_link_result['message'] );
+					update_option( 'surefeedback_verification_status', 'verified' );
+				}
+			} else {
+				// Handle specific verification statuses
+				$status = $verification_result['status'] ?? 'unknown';
+				
+				if ( $status === 'SCRIPT_NOT_LOADED' ) {
+					// Widget script is valid but not currently loaded - retry in 30 seconds
+					error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
+					update_option( 'surefeedback_verification_status', 'pending' );
+					wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
+				} else {
+					// Other errors - retry in 2 minutes  
+					error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
+					update_option( 'surefeedback_verification_status', 'failed' );
+					wp_schedule_single_event( time() + 120, 'surefeedback_auto_verify' );
+				}
+			}
+		}
+
+		/**
+		 * Verify script integration with SaaS platform
+		 * Uses the widget verification endpoint (no JWT auth required)
+		 * Follows the same flow as the SaaS dashboard
+		 *
+		 * @return array
+		 */
+		public function verify_script_integration() {
+			// Debug: Start logging
+			error_log( '=== SureFeedback Verification Debug Start ===' );
+			
+			$script_token = get_option( 'surefeedback_script_token' );
+			$site_token = get_option( 'surefeedback_api_key' ); // This is the site's API token (sf_*)
+			$parent_url = get_option( 'surefeedback_parent_url' );
+			
+			// Debug: Log configuration
+			error_log( 'Script Token: ' . ( $script_token ? substr( $script_token, 0, 10 ) . '...' : 'NOT SET' ) );
+			error_log( 'Site Token: ' . ( $site_token ? substr( $site_token, 0, 10 ) . '...' : 'NOT SET' ) );
+			error_log( 'Parent URL: ' . ( $parent_url ? $parent_url : 'NOT SET' ) );
+			
+			if ( ( ! $script_token && ! $site_token ) || ! $parent_url ) {
+				error_log( 'VERIFICATION FAILED: Missing script token or parent URL' );
+				error_log( '=== SureFeedback Verification Debug End ===' );
+				return array(
+					'success' => false,
+					'message' => 'Missing script token or parent URL',
+				);
+			}
+
+			// Use script_token if available, otherwise fall back to site_token
+			// Both should work since they're the same token in our WordPress integration
+			$token_to_use = $script_token ?: $site_token;
+			error_log( 'Token to use: ' . ( $token_to_use ? substr( $token_to_use, 0, 10 ) . '...' : 'NONE' ) );
+
+			// Call the widget verification endpoint (no JWT auth required)
+			// Same endpoint used by the SaaS dashboard polling
+			$api_base_url = $parent_url;
+			$verification_url = trailingslashit( $api_base_url ) . 'api/v1/admin/verify-integration?script_token=' . $token_to_use;
+			
+			error_log( 'API Base URL: ' . $api_base_url );
+			error_log( 'Verification URL: ' . $verification_url );
+			
+			$response = wp_remote_get( $verification_url, array(
+				'timeout' => 30,
+				'headers' => array(
+					'Content-Type' => 'application/json',
+					'User-Agent' => 'SureFeedback-WordPress-Plugin/1.0',
+					'Authorization' => 'Bearer ' . $token_to_use,
+				),
+			) );
+
+			if ( is_wp_error( $response ) ) {
+				$error_message = $response->get_error_message();
+				error_log( 'VERIFICATION FAILED: WP Error - ' . $error_message );
+				error_log( '=== SureFeedback Verification Debug End ===' );
+				return array(
+					'success' => false,
+					'message' => 'Failed to connect to verification service: ' . $error_message,
+				);
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			$response_body = wp_remote_retrieve_body( $response );
+			$response_headers = wp_remote_retrieve_headers( $response );
+			$data = json_decode( $response_body, true );
+			
+			// Debug: Log response details
+			error_log( 'Response Code: ' . $response_code );
+			error_log( 'Response Headers: ' . wp_json_encode( $response_headers ) );
+			error_log( 'Response Body: ' . $response_body );
+			error_log( 'Parsed Data: ' . wp_json_encode( $data ) );
+
+			// The widget verification endpoint returns 'integrated' instead of 'success'
+			// Same as SaaS dashboard IntegrationStep.tsx line 110-114
+			if ( $response_code === 200 && isset( $data['integrated'] ) && $data['integrated'] ) {
+				// Success
+				error_log( 'VERIFICATION SUCCESS: Script integration verified' );
+				
+				// Store verification result
+				update_option( 'surefeedback_last_verification', current_time( 'mysql' ) );
+				update_option( 'surefeedback_verification_status', 'verified' );
+				
+				// Extract verification details (same structure as SaaS dashboard)
+				$verification_data = $data['verification'] ?? array();
+				error_log( 'Verification data: ' . wp_json_encode( $verification_data ) );
+				error_log( '=== SureFeedback Verification Debug End ===' );
+				
+				return array(
+					'success' => true,
+					'verified' => true,
+					'message' => $data['message'] ?? 'Integration verified successfully',
+					'data' => $data,
+					'verification' => $verification_data,
+				);
+			}
+
+			// Handle specific error cases (same as SaaS dashboard)
+			if ( isset( $data['status'] ) ) {
+				$error_messages = array(
+					'SCRIPT_NOT_LOADED' => 'Script integration is valid but widget is not currently loaded on website',
+					'TOKEN_NOT_FOUND' => 'Invalid site token or site is inactive',
+					'INVALID_TOKEN_FORMAT' => 'Invalid token format',
+					'VERIFICATION_ERROR' => 'Failed to verify script integration',
+				);
+				
+				$message = $error_messages[ $data['status'] ] ?? ( $data['error'] ?? 'Verification failed' );
+				
+				$failure_reason = sprintf( 
+					'Status: %s, Message: %s', 
+					$data['status'], 
+					$message
+				);
+				error_log( 'VERIFICATION FAILED: ' . $failure_reason );
+				error_log( '=== SureFeedback Verification Debug End ===' );
+				
+				return array(
+					'success' => false,
+					'message' => $message,
+					'status' => $data['status'],
+					'data' => $data,
+				);
+			}
+
+			$failure_reason = sprintf( 
+				'Status: %d, Data: %s', 
+				$response_code, 
+				wp_json_encode( $data ) 
+			);
+			error_log( 'VERIFICATION FAILED: ' . $failure_reason );
+			error_log( '=== SureFeedback Verification Debug End ===' );
+
+			return array(
+				'success' => false,
+				'message' => isset( $data['error'] ) ? $data['error'] : 'Verification failed',
+				'data' => $data,
+			);
+		}
+
+		/**
+		 * Generate magic link for site access
+		 * Follows the same flow as SaaS dashboard IntegrationStep.tsx line 149
+		 *
+		 * @return array
+		 */
+		public function generate_magic_link() {
+			$site_id = get_option( 'surefeedback_id' );
+			$parent_url = get_option( 'surefeedback_parent_url' );
+			$site_token = get_option( 'surefeedback_api_key' ); // Use site token for auth
+			
+			if ( ! $site_id || ! $parent_url || ! $site_token ) {
+				return array(
+					'success' => false,
+					'message' => 'Missing required connection data (site_id, parent_url, or site_token)',
+				);
+			}
+
+			// Call the SaaS platform magic link endpoint (use Laravel API backend)
+			// Same endpoint as SaaS dashboard: SiteService.generateMagicLink(createdSite.id, 60)
+			$api_base_url = str_replace( ':3000', ':8000', $parent_url );
+			$magic_link_url = trailingslashit( $api_base_url ) . 'api/v1/generate-link';
+			
+			$response = wp_remote_post( $magic_link_url, array(
+				'timeout' => 30,
+				'headers' => array(
+					'Content-Type' => 'application/json',
+					'Authorization' => 'Bearer ' . $site_token, // Use site token instead of access_token
+				),
+				'body' => json_encode( array(
+					'site_id' => $site_id,
+					'expiration_minutes' => 60, // Same as SaaS dashboard
+				) ),
+			) );
+
+			if ( is_wp_error( $response ) ) {
+				return array(
+					'success' => false,
+					'message' => 'Failed to generate magic link: ' . $response->get_error_message(),
+				);
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			$response_body = wp_remote_retrieve_body( $response );
+			$data = json_decode( $response_body, true );
+
+			// Same response structure as SaaS dashboard expects
+			if ( $response_code === 200 && isset( $data['success'] ) && $data['success'] ) {
+				return array(
+					'success' => true,
+					'redirect_url' => $data['data']['redirect_url'] ?? '',
+					'expires_at' => $data['data']['expires_at'] ?? '',
+					'message' => 'Magic link generated successfully',
+				);
+			}
+
+			return array(
+				'success' => false,
+				'message' => $data['message'] ?? 'Failed to generate magic link',
+				'response_code' => $response_code,
+				'response_data' => $data,
+			);
 		}
 
 		// Add custom js.
@@ -1653,5 +2100,5 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 	// Initialize the plugin loader
 	SureFeedback_Loader::get_instance();
 	
-	$plugin = new SureFeedback();
+	SureFeedback::get_instance();
 endif;

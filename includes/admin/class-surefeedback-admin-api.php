@@ -194,6 +194,26 @@ if ( ! class_exists( 'SureFeedback_Admin_API' ) ) :
 					'permission_callback' => array( $this, 'check_admin_permissions' ),
 				)
 			);
+
+			register_rest_route(
+				'surefeedback/v1',
+				'/verify-integration',
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'verify_integration' ),
+					'permission_callback' => array( $this, 'check_admin_permissions' ),
+				)
+			);
+
+			register_rest_route(
+				'surefeedback/v1',
+				'/generate-magic-link',
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'generate_magic_link' ),
+					'permission_callback' => array( $this, 'check_admin_permissions' ),
+				)
+			);
 		}
 
 		/**
@@ -521,6 +541,26 @@ if ( ! class_exists( 'SureFeedback_Admin_API' ) ) :
 			}
 
 			return rest_ensure_response( $status_map );
+		}
+
+		/**
+		 * Verify script integration
+		 */
+		public function verify_integration( $request ) {
+			$surefeedback = SureFeedback::get_instance();
+			$result = $surefeedback->verify_script_integration();
+			
+			return rest_ensure_response( $result );
+		}
+
+		/**
+		 * Generate magic link
+		 */
+		public function generate_magic_link( $request ) {
+			$surefeedback = SureFeedback::get_instance();
+			$result = $surefeedback->generate_magic_link();
+			
+			return rest_ensure_response( $result );
 		}
 	}
 endif;
