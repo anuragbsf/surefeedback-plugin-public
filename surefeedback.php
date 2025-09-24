@@ -123,8 +123,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			add_action( 'admin_menu', array( $this, 'create_menu' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_menu_styles' ) );
 
-			add_action( 'admin_notices', [ $this, 'hide_admin_notices' ], 1 );
-            add_action( 'all_admin_notices', [ $this, 'hide_admin_notices' ], 1 );
+			// add_action( 'admin_notices', [ $this, 'hide_admin_notices' ], 1 );
+            // add_action( 'all_admin_notices', [ $this, 'hide_admin_notices' ], 1 );
 
 			// custom inline script and styles.
 			add_action( 'admin_init', array( $this, 'ph_custom_inline_script' ) );
@@ -145,14 +145,20 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// maybe disconnect from parent site.
 			add_action( 'admin_init', array( $this, 'maybe_disconnect' ) );
 
-			// handle connection callback from SureFeedback
+			// handle connection callback from SureFeedback (original method)
 			add_action( 'admin_init', array( $this, 'handle_connection_callback' ) );
+
+			// handle webhook from SureFeedback backend
+			add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
 
 			// inject widget script on frontend for connected sites
 			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
+			
+			// handle connection updates from webhook
+			add_action( 'surefeedback_connection_updated', array( $this, 'refresh_script_injection' ) );
 
 			// handle automatic verification
-			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
+			// add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
 
 			// remove disconnect args after successful disconnect.
 			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
@@ -1195,7 +1201,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				update_option( 'surefeedback_state_token', '' ); // Clear state token
 
 				// Auto-verify script integration after connection
-				$this->auto_verify_and_generate_magic_link();
+				// $this->auto_verify_and_generate_magic_link();
+				$this->perform_auto_verification();
 
 				// Set success message
 				add_action( 'admin_notices', array( $this, 'connection_success_notice' ) );
@@ -1392,12 +1399,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			
 			// Set token in localStorage before widget-loader.js runs
 			// This allows widget-loader.js to find the token since it checks localStorage
-			try {
-				localStorage.setItem('surefeedback_api_token', defaultToken);
-				localStorage.setItem('surefeedback_token_timestamp', Date.now().toString());
-			} catch (e) {
-				console.warn('SureFeedback: Could not set localStorage token:', e);
-			}
+			// try {
+			// 	localStorage.setItem('surefeedback_api_token', defaultToken);
+			// 	localStorage.setItem('surefeedback_token_timestamp', Date.now().toString());
+			// } catch (e) {
+			// 	console.warn('SureFeedback: Could not set localStorage token:', e);
+			// }
 			
 			var sf = d.createElement(t),
 				s = d.getElementsByTagName(t)[0];
@@ -1460,14 +1467,62 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		}
 
 		/**
+		 * Trigger script injection immediately by making internal HTTP request
+		 * This forces wp_footer to run and inject the script right after webhook completes
+		 * 
+		 * @return void
+		 */
+		public function trigger_script_injection_immediately() {
+			// Get the site URL to make internal request
+			$site_url = home_url();
+			
+			// Log the attempt
+			error_log( 'SureFeedback: Triggering immediate script injection by requesting: ' . $site_url );
+			
+			// Make internal HTTP request to trigger wp_footer
+			$response = wp_remote_get( $site_url, array(
+				'timeout' => 30,
+				'blocking' => false, // Don't wait for response, just trigger the request
+				'headers' => array(
+					'User-Agent' => 'SureFeedback-Auto-Injection/1.0'
+				)
+			) );
+			
+			if ( is_wp_error( $response ) ) {
+				error_log( 'SureFeedback: Failed to trigger immediate script injection: ' . $response->get_error_message() );
+			} else {
+				error_log( 'SureFeedback: Successfully triggered immediate script injection request' );
+			}
+		}
+
+		/**
+		 * Refresh script injection after webhook connection update
+		 * 
+		 * @return void
+		 */
+		public function refresh_script_injection() {
+			// Force refresh of connection status
+			$site_id = get_option( 'surefeedback_id' );
+			$parent_url = get_option( 'surefeedback_parent_url' );
+			
+			if ( $site_id && $parent_url ) {
+				// Mark that the connection has been refreshed
+				update_option( 'surefeedback_script_refreshed', time() );
+				
+				// Log for debugging
+				error_log( 'SureFeedback: Script injection refreshed after webhook connection update' );
+			}
+		}
+
+		/**
 		 * Auto-verify script and generate magic link after connection
 		 *
 		 * @return void
 		 */
-		public function auto_verify_and_generate_magic_link() {
-			// Schedule verification after a short delay to allow script injection
-			wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
-		}
+		// public function auto_verify_and_generate_magic_link() {
+		// 	// Schedule verification after a short delay to allow script injection
+		// 	wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
+		// }
 
 		/**
 		 * Perform automatic verification and generate magic link
@@ -1477,12 +1532,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function perform_auto_verification() {
 			// Verify script integration (same as SaaS dashboard polling)
-			$verification_result = $this->verify_script_integration();
+			// $verification_result = $this->verify_script_integration();
 			
-			// Check verification status (same logic as IntegrationStep.tsx line 110-114)
-			$verified = $verification_result['success'] && $verification_result['verified'];
+			// // Check verification status (same logic as IntegrationStep.tsx line 110-114)
+			// $verified = $verification_result['success'] && $verification_result['verified'];
 			
-			if ( $verified ) {
+			// if ( $verified ) {
 				// Script is verified, now generate magic link (same as SaaS dashboard)
 				$magic_link_result = $this->generate_magic_link();
 				
@@ -1504,22 +1559,22 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 					error_log( 'SureFeedback: Verification successful but magic link generation failed: ' . $magic_link_result['message'] );
 					update_option( 'surefeedback_verification_status', 'verified' );
 				}
-			} else {
-				// Handle specific verification statuses
-				$status = $verification_result['status'] ?? 'unknown';
+			// } else {
+			// 	// Handle specific verification statuses
+			// 	$status = $verification_result['status'] ?? 'unknown';
 				
-				if ( $status === 'SCRIPT_NOT_LOADED' ) {
-					// Widget script is valid but not currently loaded - retry in 30 seconds
-					error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
-					update_option( 'surefeedback_verification_status', 'pending' );
-					wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
-				} else {
-					// Other errors - retry in 2 minutes  
-					error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
-					update_option( 'surefeedback_verification_status', 'failed' );
-					wp_schedule_single_event( time() + 120, 'surefeedback_auto_verify' );
-				}
-			}
+			// 	if ( $status === 'SCRIPT_NOT_LOADED' ) {
+			// 		// Widget script is valid but not currently loaded - retry in 30 seconds
+			// 		error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
+			// 		update_option( 'surefeedback_verification_status', 'pending' );
+			// 		wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
+			// 	} else {
+			// 		// Other errors - retry in 2 minutes  
+			// 		error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
+			// 		update_option( 'surefeedback_verification_status', 'failed' );
+			// 		wp_schedule_single_event( time() + 120, 'surefeedback_auto_verify' );
+			// 	}
+			// }
 		}
 
 		/**
@@ -1694,7 +1749,9 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 					'expiration_minutes' => 60, // Same as SaaS dashboard
 				) ),
 			) );
-
+			// var_dump('<pre>');
+			// var_dump($response);
+			// var_dump('</pre>');
 			if ( is_wp_error( $response ) ) {
 				return array(
 					'success' => false,
@@ -2094,6 +2151,95 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			}
 
 			wp_send_json_success( $status_map );
+		}
+
+		/**
+		 * Register webhook endpoint for SureFeedback backend
+		 */
+		public function register_webhook_endpoint() {
+			register_rest_route('surefeedback/v1', '/webhook', array(
+				'methods' => 'POST',
+				'callback' => array($this, 'handle_webhook_callback'),
+				'permission_callback' => array($this, 'verify_webhook_permission'),
+			));
+		}
+
+		/**
+		 * Verify webhook permission - basic security check
+		 */
+		public function verify_webhook_permission($request) {
+			// For now, allow all requests - can add more security later
+			return true;
+		}
+
+		/**
+		 * Handle webhook callback from SureFeedback backend
+		 * This processes the same data that was previously sent via URL parameters
+		 */
+		public function handle_webhook_callback($request) {
+			$params = $request->get_params();
+			
+			// Log webhook received for debugging
+			error_log('SureFeedback: Webhook endpoint called with params: ' . print_r($params, true));
+			
+			// Validate required parameters
+			if (empty($params['success']) || empty($params['site_token'])) {
+				error_log('SureFeedback: Webhook validation failed - missing required parameters');
+				return new WP_Error('missing_params', 'Missing required parameters', array('status' => 400));
+			}
+
+			if ($params['success'] === '1') {
+				// Connection successful - save the connection data
+				$site_token = sanitize_text_field($params['site_token']);
+				$script_token = sanitize_text_field($params['script_token'] ?? $site_token);
+				$site_id = sanitize_text_field($params['site_id'] ?? '');
+				$organization_id = sanitize_text_field($params['organization_id'] ?? '');
+				$site_name = sanitize_text_field($params['site_name'] ?? '');
+				$domain = sanitize_text_field($params['domain'] ?? '');
+				$integration_script = $params['integration_script'] ?? '';
+				$script_instructions = $params['script_instructions'] ?? '';
+
+				// Update options with the connection data
+				update_option('surefeedback_site_token', $site_token);
+				update_option('surefeedback_script_token', $script_token);
+				update_option('surefeedback_id', $site_id); // Match what script injection expects
+				update_option('surefeedback_site_id', $site_id); // Keep for compatibility
+				update_option('surefeedback_organization_id', $organization_id);
+				update_option('surefeedback_site_name', $site_name);
+				update_option('surefeedback_domain', $domain);
+				update_option('surefeedback_integration_script', $integration_script);
+				update_option('surefeedback_script_instructions', $script_instructions);
+				update_option('surefeedback_connection_status', 'connected');
+				update_option('surefeedback_widget_enabled', true);
+				
+				// Add required options for script injection
+				update_option('surefeedback_access_token', $site_token); // Use site_token as access_token
+				update_option('surefeedback_parent_url', 'http://localhost:8000'); // SaaS backend URL
+
+				// Log successful connection with saved options for debugging
+				error_log('SureFeedback: Webhook received - site connected successfully');
+				error_log('SureFeedback: Saved options - site_id: ' . $site_id . ', script_token: ' . $script_token);
+				
+				// Trigger immediate script injection by making internal HTTP request
+				// This forces wp_footer to run right after webhook completes
+				$this->trigger_script_injection_immediately();
+				
+				// Trigger the connection updated action for any other listeners
+				do_action('surefeedback_connection_updated');
+
+				return rest_ensure_response(array(
+					'success' => true,
+					'message' => 'Connection data saved successfully',
+				));
+			} else {
+				// Connection failed
+				error_log('SureFeedback: Webhook received - connection failed');
+				
+				return rest_ensure_response(array(
+					'success' => false,
+					'message' => 'Connection failed',
+				));
+			}
 		}
 	}
 
