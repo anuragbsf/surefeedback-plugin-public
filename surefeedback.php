@@ -154,11 +154,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// inject widget script on frontend for connected sites
 			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
 			
-			// handle connection updates from webhook
-			add_action( 'surefeedback_connection_updated', array( $this, 'refresh_script_injection' ) );
-
 			// handle automatic verification
-			// add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
+			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
 
 			// remove disconnect args after successful disconnect.
 			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
@@ -1201,8 +1198,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				update_option( 'surefeedback_state_token', '' ); // Clear state token
 
 				// Auto-verify script integration after connection
-				// $this->auto_verify_and_generate_magic_link();
-				$this->perform_auto_verification();
+				$this->auto_verify_script();
+				// $this->perform_auto_verification();
 
 				// Set success message
 				add_action( 'admin_notices', array( $this, 'connection_success_notice' ) );
@@ -1496,33 +1493,14 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		}
 
 		/**
-		 * Refresh script injection after webhook connection update
-		 * 
-		 * @return void
-		 */
-		public function refresh_script_injection() {
-			// Force refresh of connection status
-			$site_id = get_option( 'surefeedback_id' );
-			$parent_url = get_option( 'surefeedback_parent_url' );
-			
-			if ( $site_id && $parent_url ) {
-				// Mark that the connection has been refreshed
-				update_option( 'surefeedback_script_refreshed', time() );
-				
-				// Log for debugging
-				error_log( 'SureFeedback: Script injection refreshed after webhook connection update' );
-			}
-		}
-
-		/**
 		 * Auto-verify script and generate magic link after connection
 		 *
 		 * @return void
 		 */
-		// public function auto_verify_and_generate_magic_link() {
-		// 	// Schedule verification after a short delay to allow script injection
-		// 	wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
-		// }
+		public function auto_verify_script() {
+			// Schedule verification after a short delay to allow script injection
+			wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
+		}
 
 		/**
 		 * Perform automatic verification and generate magic link
@@ -1532,49 +1510,30 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 */
 		public function perform_auto_verification() {
 			// Verify script integration (same as SaaS dashboard polling)
-			// $verification_result = $this->verify_script_integration();
+			$verification_result = $this->verify_script_integration();
 			
 			// // Check verification status (same logic as IntegrationStep.tsx line 110-114)
-			// $verified = $verification_result['success'] && $verification_result['verified'];
+			$verified = $verification_result['success'] && $verification_result['verified'];
 			
-			// if ( $verified ) {
+			if ( $verified ) {
 				// Script is verified, now generate magic link (same as SaaS dashboard)
-				$magic_link_result = $this->generate_magic_link();
-				
-				if ( $magic_link_result['success'] ) {
-					// Store magic link for admin display (same as SaaS dashboard)
-					update_option( 'surefeedback_magic_link', $magic_link_result['redirect_url'] );
-					update_option( 'surefeedback_magic_link_expires', $magic_link_result['expires_at'] );
 					update_option( 'surefeedback_verification_status', 'verified' );
-					
-					// Store verification details for admin display
-					if ( isset( $verification_result['verification'] ) ) {
-						update_option( 'surefeedback_verification_data', wp_json_encode( $verification_result['verification'] ) );
-					}
-					
-					// Log success
-					error_log( 'SureFeedback: Auto-verification completed and magic link generated successfully' );
+			} else {
+				// Handle specific verification statuses
+				$status = $verification_result['status'] ?? 'unknown';
+				
+				if ( $status === 'SCRIPT_NOT_LOADED' ) {
+					// Widget script is valid but not currently loaded - retry in 30 seconds
+					error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
+					update_option( 'surefeedback_verification_status', 'pending' );
+					wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
 				} else {
-					// Log magic link generation failure but still mark as verified
-					error_log( 'SureFeedback: Verification successful but magic link generation failed: ' . $magic_link_result['message'] );
-					update_option( 'surefeedback_verification_status', 'verified' );
+					// Other errors - retry in 2 minutes  
+					error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
+					update_option( 'surefeedback_verification_status', 'failed' );
+					wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
 				}
-			// } else {
-			// 	// Handle specific verification statuses
-			// 	$status = $verification_result['status'] ?? 'unknown';
-				
-			// 	if ( $status === 'SCRIPT_NOT_LOADED' ) {
-			// 		// Widget script is valid but not currently loaded - retry in 30 seconds
-			// 		error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
-			// 		update_option( 'surefeedback_verification_status', 'pending' );
-			// 		wp_schedule_single_event( time() + 30, 'surefeedback_auto_verify' );
-			// 	} else {
-			// 		// Other errors - retry in 2 minutes  
-			// 		error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
-			// 		update_option( 'surefeedback_verification_status', 'failed' );
-			// 		wp_schedule_single_event( time() + 120, 'surefeedback_auto_verify' );
-			// 	}
-			// }
+			}
 		}
 
 		/**
@@ -1715,71 +1674,6 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			);
 		}
 
-		/**
-		 * Generate magic link for site access
-		 * Follows the same flow as SaaS dashboard IntegrationStep.tsx line 149
-		 *
-		 * @return array
-		 */
-		public function generate_magic_link() {
-			$site_id = get_option( 'surefeedback_id' );
-			$parent_url = get_option( 'surefeedback_parent_url' );
-			$site_token = get_option( 'surefeedback_api_key' ); // Use site token for auth
-			
-			if ( ! $site_id || ! $parent_url || ! $site_token ) {
-				return array(
-					'success' => false,
-					'message' => 'Missing required connection data (site_id, parent_url, or site_token)',
-				);
-			}
-
-			// Call the SaaS platform magic link endpoint (use Laravel API backend)
-			// Same endpoint as SaaS dashboard: SiteService.generateMagicLink(createdSite.id, 60)
-			$api_base_url = str_replace( ':3000', ':8000', $parent_url );
-			$magic_link_url = trailingslashit( $api_base_url ) . 'api/v1/generate-link';
-			
-			$response = wp_remote_post( $magic_link_url, array(
-				'timeout' => 30,
-				'headers' => array(
-					'Content-Type' => 'application/json',
-					'Authorization' => 'Bearer ' . $site_token, // Use site token instead of access_token
-				),
-				'body' => json_encode( array(
-					'site_id' => $site_id,
-					'expiration_minutes' => 60, // Same as SaaS dashboard
-				) ),
-			) );
-			// var_dump('<pre>');
-			// var_dump($response);
-			// var_dump('</pre>');
-			if ( is_wp_error( $response ) ) {
-				return array(
-					'success' => false,
-					'message' => 'Failed to generate magic link: ' . $response->get_error_message(),
-				);
-			}
-
-			$response_code = wp_remote_retrieve_response_code( $response );
-			$response_body = wp_remote_retrieve_body( $response );
-			$data = json_decode( $response_body, true );
-
-			// Same response structure as SaaS dashboard expects
-			if ( $response_code === 200 && isset( $data['success'] ) && $data['success'] ) {
-				return array(
-					'success' => true,
-					'redirect_url' => $data['data']['redirect_url'] ?? '',
-					'expires_at' => $data['data']['expires_at'] ?? '',
-					'message' => 'Magic link generated successfully',
-				);
-			}
-
-			return array(
-				'success' => false,
-				'message' => $data['message'] ?? 'Failed to generate magic link',
-				'response_code' => $response_code,
-				'response_data' => $data,
-			);
-		}
 
 		// Add custom js.
 		/**
