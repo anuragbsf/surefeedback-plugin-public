@@ -1,14 +1,38 @@
-import React from 'react'
+import React, { useState } from 'react'
 import NavMenu from '../components/NavMenu'
 import { Container } from "@bsf/force-ui";
 import ConnectionCard  from './ConnectionCard.jsx'
 import Connected from './Connected.jsx';
 import UnverifiedState from './UnverifiedState.jsx';
+import NotConnected from './NotConnected.jsx';
+import Onboarding from './index.jsx';
 
 const Connections = () => {
-  // Get verification status from localized data
+  const [isStarted, setIsStarted] = useState(false);
+  
+  // Get status from localized data
   const verificationStatus = window.sureFeedbackAdmin?.verification_status || 'unverified';
-  const isVerified = verificationStatus === 'verified';
+  const connectionStatus = window.sureFeedbackAdmin?.connection_status || 'not_connected';
+
+  // If setup is started, show onboarding
+  if (isStarted) {
+    return <Onboarding />;
+  }
+
+  // Determine which component to show based on status
+  const renderContent = () => {
+    // If not connected, show NotConnected component
+    if (connectionStatus === 'not_connected') {
+      return <NotConnected setIsStarted={setIsStarted} />;
+    }
+    
+    // If connected, check verification status
+    if (verificationStatus === 'verified') {
+      return <Connected />;
+    } else {
+      return <UnverifiedState />;
+    }
+  };
 
   return (
      <div id="surefeedback-dashboard-app" className="surefeedback-styles">
@@ -29,11 +53,7 @@ const Connections = () => {
                         className="p-2 w-full"
                         shrink={1}
                     >
-                      {isVerified ? (
-                        <Connected/>
-                      ) : (
-                        <UnverifiedState/>
-                      )}
+                      {renderContent()}
                     </Container.Item>
                 </Container>
       </div>
