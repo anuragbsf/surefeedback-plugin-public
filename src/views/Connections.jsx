@@ -5,6 +5,7 @@ import ConnectionCard  from './ConnectionCard.jsx'
 import Connected from './Connected.jsx';
 import UnverifiedState from './UnverifiedState.jsx';
 import NotConnected from './NotConnected.jsx';
+import ConnectionFailed from './ConnectionFailed.jsx';
 import Onboarding from './index.jsx';
 
 const Connections = () => {
@@ -29,6 +30,8 @@ const Connections = () => {
     // If connected, check verification status
     if (verificationStatus === 'verified') {
       return <Connected />;
+    } else if (verificationStatus === 'failed') {
+      return <ConnectionFailed />;
     } else {
       return <UnverifiedState />;
     }
