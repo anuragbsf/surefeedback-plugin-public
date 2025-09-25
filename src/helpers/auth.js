@@ -28,7 +28,19 @@ export const authenticateRedirect = () => {
   // Construct the connection URL using localized app URL
   const connectUrl = `${connection.app_url}/connect?${params.toString()}`;
   
+  // Store connection intent in sessionStorage for redirect after login
+  const connectionIntent = {
+    url: connectUrl,
+    timestamp: Date.now(),
+    source: 'wordpress_plugin'
+  };
+  
+  // Store in both sessionStorage and localStorage for reliability
+  sessionStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
+  localStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
+  
   console.log('Redirecting to:', connectUrl);
+  console.log('Connection intent stored:', connectionIntent);
   
   // Redirect to parent site for authentication
   window.open(connectUrl, '_self');
