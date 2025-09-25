@@ -120,6 +120,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 
 			// options and menu.
 			add_action( 'admin_init', array( $this, 'options' ) );
+			add_action( 'admin_init', array( $this, 'handle_test_status' ) );
 			add_action( 'admin_menu', array( $this, 'create_menu' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_menu_styles' ) );
 
@@ -565,6 +566,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
 						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
+						'connection_status' => get_option( 'surefeedback_connection_status', 'not_connected' ),
 						// Connection data for auth.js
 						'connection' => array(
 							'app_url'          => 'http://localhost:3000',
@@ -708,6 +710,34 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				$tag = str_replace( '<script ', '<script type="module" ', $tag );
 			}
 			return $tag;
+		}
+
+		/**
+		 * Handle test status changes via URL parameters
+		 * 
+		 * @return void
+		 */
+		public function handle_test_status() {
+			// Only allow in admin and if user has manage_options capability
+			if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+
+			// Test connection status
+			if ( isset( $_GET['test_connection'] ) ) {
+				$status = sanitize_text_field( $_GET['test_connection'] );
+				if ( in_array( $status, array( 'connected', 'not_connected' ) ) ) {
+					update_option( 'surefeedback_connection_status', $status );
+				}
+			}
+
+			// Test verification status  
+			if ( isset( $_GET['test_verification'] ) ) {
+				$status = sanitize_text_field( $_GET['test_verification'] );
+				if ( in_array( $status, array( 'verified', 'pending', 'failed', 'unverified' ) ) ) {
+					update_option( 'surefeedback_verification_status', $status );
+				}
+			}
 		}
 
 		/**
@@ -1790,6 +1820,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
 						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
+						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
+						'connection_status' => get_option( 'surefeedback_connection_status', 'not_connected' ),
 						'surerank_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surerank.svg',
 						'surecart_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surecart.svg',
 						'sureforms_icon'   => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/sureforms.svg',
