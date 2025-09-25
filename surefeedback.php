@@ -2117,6 +2117,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				// Trigger immediate script injection by making internal HTTP request
 				// This forces wp_footer to run right after webhook completes
 				$this->trigger_script_injection_immediately();
+
+				$this->auto_verify_script();
 				
 				// Trigger the connection updated action for any other listeners
 				do_action('surefeedback_connection_updated');
