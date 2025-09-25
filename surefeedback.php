@@ -564,6 +564,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
 						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
+						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
 						// Connection data for auth.js
 						'connection' => array(
 							'app_url'          => 'http://localhost:3000',
