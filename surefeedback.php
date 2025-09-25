@@ -147,7 +147,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			add_action( 'admin_init', array( $this, 'maybe_disconnect' ) );
 
 			// handle connection callback from SureFeedback (original method)
-			add_action( 'admin_init', array( $this, 'handle_connection_callback' ) );
+			// add_action( 'admin_init', array( $this, 'handle_connection_callback' ) );
 
 			// handle webhook from SureFeedback backend
 			add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
@@ -157,6 +157,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			
 			// handle automatic verification
 			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
+			add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
 
 			// remove disconnect args after successful disconnect.
 			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
@@ -1524,46 +1525,115 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		}
 
 		/**
-		 * Auto-verify script and generate magic link after connection
+		 * Auto-verify script with smart scheduling and retry limits
+		 * - Schedules verification every 1 minute
+		 * - Limits to 10 attempts maximum
+		 * - Switches to hourly updates after verification
 		 *
 		 * @return void
 		 */
 		public function auto_verify_script() {
-			// Schedule verification after a short delay to allow script injection
+			// Reset attempt counter when starting new verification cycle
+			update_option( 'surefeedback_verification_attempts', 0 );
+			
+			// Schedule initial verification after a short delay
 			wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
 		}
 
 		/**
-		 * Perform automatic verification and generate magic link
-		 * Follows the same logic as SaaS dashboard IntegrationStep.tsx polling
+		 * Perform automatic verification with smart retry logic
+		 * - Limits attempts to 10 maximum
+		 * - Schedules every 1 minute until verified or limit reached
+		 * - Switches to hourly updates after successful verification
 		 *
 		 * @return void
 		 */
 		public function perform_auto_verification() {
-			// Verify script integration (same as SaaS dashboard polling)
-			$verification_result = $this->verify_script_integration();
+			// Get current verification status and attempt count
+			$current_status = get_option( 'surefeedback_verification_status', 'pending' );
+			$attempts = intval( get_option( 'surefeedback_verification_attempts', 0 ) );
 			
-			// // Check verification status (same logic as IntegrationStep.tsx line 110-114)
+			// If already verified, schedule hourly update and exit
+			if ( $current_status === 'verified' ) {
+				// Clear any existing scheduled events
+				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
+				
+				// Schedule hourly verification update to keep database fresh
+				if ( ! wp_next_scheduled( 'surefeedback_hourly_verify' ) ) {
+					wp_schedule_event( time() + 3600, 'hourly', 'surefeedback_hourly_verify' );
+					error_log( 'SureFeedback: Scheduled hourly verification updates' );
+				}
+				return;
+			}
+			
+			// Check if we've exceeded maximum attempts (10)
+			if ( $attempts >= 10 ) {
+				error_log( 'SureFeedback: Maximum verification attempts (10) reached, stopping scheduled verification' );
+				update_option( 'surefeedback_verification_status', 'failed' );
+				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
+				return;
+			}
+			
+			// Increment attempt counter
+			$attempts++;
+			update_option( 'surefeedback_verification_attempts', $attempts );
+			error_log( "SureFeedback: Verification attempt {$attempts}/10" );
+			
+			// Perform verification
+			$verification_result = $this->verify_script_integration();
 			$verified = $verification_result['success'] && $verification_result['verified'];
 			
 			if ( $verified ) {
-				// Script is verified, now generate magic link (same as SaaS dashboard)
-					update_option( 'surefeedback_verification_status', 'verified' );
-			} else {
-				// Handle specific verification statuses
-				$status = $verification_result['status'] ?? 'unknown';
+				// Success! Update status and switch to hourly updates
+				update_option( 'surefeedback_verification_status', 'verified' );
+				error_log( "SureFeedback: Verification successful after {$attempts} attempts" );
 				
-				if ( $status === 'SCRIPT_NOT_LOADED' ) {
-					// Widget script is valid but not currently loaded - retry in 30 seconds
-					error_log( 'SureFeedback: Widget script not yet loaded, will retry in 30 seconds' );
-					update_option( 'surefeedback_verification_status', 'pending' );
-					wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
+				// Clear minute-based scheduling
+				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
+				
+				// Schedule hourly updates to keep database fresh
+				wp_schedule_event( time() + 3600, 'hourly', 'surefeedback_hourly_verify' );
+				error_log( 'SureFeedback: Switched to hourly verification updates' );
+			} else {
+				// Not yet verified, schedule next attempt in 1 minute
+				$status = $verification_result['status'] ?? 'unknown';
+				update_option( 'surefeedback_verification_status', 'pending' );
+				
+				if ( $attempts < 10 ) {
+					// Schedule next attempt in 1 minute
+					wp_schedule_single_event( time() + 60, 'surefeedback_auto_verify' );
+					error_log( "SureFeedback: Verification failed ({$status}), scheduling attempt " . ($attempts + 1) . "/10 in 1 minute" );
 				} else {
-					// Other errors - retry in 2 minutes  
-					error_log( 'SureFeedback: Auto-verification failed (' . $status . '): ' . ( $verification_result['message'] ?? 'Unknown error' ) );
+					error_log( 'SureFeedback: Final verification attempt failed, stopping scheduled verification' );
 					update_option( 'surefeedback_verification_status', 'failed' );
-					wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
 				}
+			}
+		}
+		
+		/**
+		 * Perform hourly verification update to keep database fresh
+		 * Called after initial verification succeeds
+		 *
+		 * @return void
+		 */
+		public function perform_hourly_verification_update() {
+			// Perform verification to get fresh data
+			$verification_result = $this->verify_script_integration();
+			$verified = $verification_result['success'] && $verification_result['verified'];
+			
+			if ( $verified ) {
+				update_option( 'surefeedback_verification_status', 'verified' );
+				error_log( 'SureFeedback: Hourly verification update - still verified' );
+			} else {
+				// Verification failed, switch back to retry mode
+				update_option( 'surefeedback_verification_status', 'pending' );
+				update_option( 'surefeedback_verification_attempts', 0 );
+				
+				// Cancel hourly updates and restart minute-based verification
+				wp_clear_scheduled_hook( 'surefeedback_hourly_verify' );
+				wp_schedule_single_event( time() + 60, 'surefeedback_auto_verify' );
+				
+				error_log( 'SureFeedback: Hourly verification failed, switching back to retry mode' );
 			}
 		}
 
