@@ -46,6 +46,50 @@ export const authenticateRedirect = () => {
   window.open(connectUrl, '_self');
 };
 
+export const reconnectSite = () => {
+  const { sureFeedbackAdmin } = window;
+  
+  if (!sureFeedbackAdmin || !sureFeedbackAdmin.connection) {
+    console.error('SureFeedback admin data or connection info not available');
+    return;
+  }
+
+  const { connection } = sureFeedbackAdmin;
+  
+  // Generate a state token for security
+  const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  
+  // Build reconnection URL parameters
+  const params = new URLSearchParams({
+    source: 'wordpress',
+    action: 'reconnect_site',
+    callback_url: connection.callback_url,
+    state: state,
+    site_data: btoa(JSON.stringify(connection.site_data)), // base64 encode like PHP version
+  });
+
+  // Construct the reconnection URL - use /reconnect instead of /connect
+  const reconnectUrl = `${connection.app_url}/reconnect?${params.toString()}`;
+  
+  // Store connection intent for redirect after login
+  const connectionIntent = {
+    url: reconnectUrl,
+    timestamp: Date.now(),
+    source: 'wordpress_plugin',
+    action: 'reconnect'
+  };
+  
+  // Store in both sessionStorage and localStorage for reliability
+  sessionStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
+  localStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
+  
+  console.log('Reconnecting to:', reconnectUrl);
+  console.log('Reconnection intent stored:', connectionIntent);
+  
+  // Redirect to SaaS platform for reconnection
+  window.open(reconnectUrl, '_self');
+};
+
 export const getUrlParam = (param) => {
   return new URL(window.location.href).searchParams.get(param);
 };

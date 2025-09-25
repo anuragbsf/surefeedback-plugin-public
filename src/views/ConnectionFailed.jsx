@@ -1,9 +1,10 @@
 import React from 'react';
+import { reconnectSite } from '../helpers/auth';
 
 const ConnectionFailed = () => {
   const handleConnectAgain = () => {
-    // Add connect again logic here
-    console.log('Connect again clicked');
+    // Trigger reconnection flow
+    reconnectSite();
   };
 
   return (
