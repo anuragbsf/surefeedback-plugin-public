@@ -568,6 +568,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
 						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
 						'connection_status' => get_option( 'surefeedback_connection_status', 'not_connected' ),
+						// Site token data for disconnect functionality
+						'site_token'       => get_option( 'surefeedback_site_token', '' ) ?: get_option( 'surefeedback_api_key', '' ),
+						'api_token'        => get_option( 'surefeedback_api_key', '' ),
+						'site_domain'      => parse_url( home_url(), PHP_URL_HOST ),
+						'api_url'          => 'http://localhost:8000/api/v1',
+						'user_token'       => get_option( 'surefeedback_user_token', '' ),
 						// Connection data for auth.js
 						'connection' => array(
 							'app_url'          => 'http://localhost:3000',
@@ -2195,6 +2201,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				$domain = sanitize_text_field($params['domain'] ?? '');
 				$integration_script = $params['integration_script'] ?? '';
 				$script_instructions = $params['script_instructions'] ?? '';
+				$user_token = sanitize_text_field($params['user_token'] ?? '');
 
 				// Update options with the connection data
 				update_option('surefeedback_site_token', $site_token);
@@ -2206,6 +2213,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				update_option('surefeedback_domain', $domain);
 				update_option('surefeedback_integration_script', $integration_script);
 				update_option('surefeedback_script_instructions', $script_instructions);
+				update_option('surefeedback_user_token', $user_token);
 				update_option('surefeedback_connection_status', 'connected');
 				update_option('surefeedback_widget_enabled', true);
 				

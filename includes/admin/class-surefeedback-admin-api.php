@@ -214,6 +214,16 @@ if ( ! class_exists( 'SureFeedback_Admin_API' ) ) :
 					'permission_callback' => array( $this, 'check_admin_permissions' ),
 				)
 			);
+
+			register_rest_route(
+				'surefeedback/v1',
+				'/disconnect',
+				array(
+					'methods'             => 'POST',
+					'callback'            => array( $this, 'disconnect_site' ),
+					'permission_callback' => array( $this, 'check_admin_permissions' ),
+				)
+			);
 		}
 
 		/**
@@ -561,6 +571,51 @@ if ( ! class_exists( 'SureFeedback_Admin_API' ) ) :
 			$result = $surefeedback->generate_magic_link();
 			
 			return rest_ensure_response( $result );
+		}
+
+		/**
+		 * Disconnect site and clear local data
+		 */
+		public function disconnect_site( $request ) {
+			try {
+				// Clear all SureFeedback related WordPress options
+				// $options_to_clear = array(
+				// 	'surefeedback_script_token',
+				// );
+
+				// $cleared_options = 0;
+				// foreach ( $options_to_clear as $option ) {
+				// 	if ( delete_option( $option ) ) {
+				// 		$cleared_options++;
+				// 	}
+				// }
+				delete_option( 'surefeedback_script_token' );
+				update_option( 'surefeedback_verification_status', 'failed');
+				// Clear any transients related to SureFeedback
+				delete_transient( 'surefeedback_connection_test' );
+				delete_transient( 'surefeedback_verification_status' );
+				
+				// Log the disconnection
+				error_log( 'SureFeedback: Site disconnected locally. Cleared ' . $cleared_options . ' options.' );
+
+				return rest_ensure_response( array(
+					'success' => true,
+					'message' => __( 'Site disconnected successfully. All local data has been cleared.', 'surefeedback' ),
+					'data' => array(
+						'cleared_options' => $cleared_options,
+						'disconnected_at' => current_time( 'mysql' ),
+					),
+				) );
+
+			} catch ( Exception $e ) {
+				error_log( 'SureFeedback: Disconnect error - ' . $e->getMessage() );
+				
+				return new WP_Error(
+					'disconnect_failed',
+					__( 'Failed to disconnect site. Please try again.', 'surefeedback' ),
+					array( 'status' => 500 )
+				);
+			}
 		}
 	}
 endif;

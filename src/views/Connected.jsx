@@ -1,13 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@bsf/force-ui";
 import { __ } from "@wordpress/i18n";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { disconnectSite } from "../helpers/auth";
 
 const Connected = () => {
-  const handleDisconnect = () => {
-    // Add disconnect logic here
-    console.log("Disconnect clicked");
-    // You can add API call to disconnect here
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [disconnectStatus, setDisconnectStatus] = useState(null); // null, 'success', 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleDisconnect = async () => {
+    if (isDisconnecting) return;
+
+    // Show confirmation dialog
+    const confirmed = confirm(
+      __("Are you sure you want to disconnect this site from SureFeedback? This will deactivate the widget and clear all connection data.", "surefeedback")
+    );
+
+    if (!confirmed) return;
+
+    setIsDisconnecting(true);
+    setDisconnectStatus(null);
+    setErrorMessage('');
+
+    try {
+      const result = await disconnectSite();
+      
+      if (result.success) {
+        setDisconnectStatus('success');
+        
+        // Redirect to main admin page after short delay
+        setTimeout(() => {
+          window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback&disconnected=1`;
+        }, 2000);
+      } else {
+        setDisconnectStatus('error');
+        setErrorMessage(result.error || __('Failed to disconnect site. Please try again.', 'surefeedback'));
+      }
+    } catch (error) {
+      console.error('Disconnect error:', error);
+      setDisconnectStatus('error');
+      setErrorMessage(__('Network error occurred. Please try again.', 'surefeedback'));
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   const handleGoToDashboard = () => {
@@ -44,6 +80,27 @@ const Connected = () => {
           </div>
         </div>
 
+        {/* Disconnect Status Feedback */}
+        {disconnectStatus && (
+          <div className={`mb-4 p-3 rounded-lg text-center ${
+            disconnectStatus === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-700' 
+              : 'bg-red-50 border border-red-200 text-red-700'
+          }`}>
+            {disconnectStatus === 'success' ? (
+              <div className="flex items-center justify-center gap-2">
+                <CheckCircle size={16} />
+                {__("Site disconnected successfully! Redirecting...", "surefeedback")}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <AlertTriangle size={16} />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex justify-center gap-4">
           <Button variant="primary" onClick={handleGoToDashboard}>
             {__("Go to Dashboard", "surefeedback")}
@@ -52,8 +109,16 @@ const Connected = () => {
             variant="destructive"
             className="!bg-red-50 !text-red-600 !border !border-red-300 hover:!bg-red-100"
             onClick={handleDisconnect}
+            disabled={isDisconnecting}
           >
-            {__("Disconnect", "surefeedback")}
+            {isDisconnecting ? (
+              <div className="flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                {__("Disconnecting...", "surefeedback")}
+              </div>
+            ) : (
+              __("Disconnect", "surefeedback")
+            )}
           </Button>
         </div>
       </div>
