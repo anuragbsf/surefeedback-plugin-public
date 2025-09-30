@@ -65,7 +65,7 @@ class SureFeedback_Loader {
 		require_once $this->plugin_path . 'includes/core/surefeedback-functions.php';
 		
 		// API classes
-		require_once $this->plugin_path . 'includes/api/class-surefeedback-rest-api.php';
+		// require_once $this->plugin_path . 'includes/api/class-surefeedback-rest-api.php';
 		require_once $this->plugin_path . 'includes/admin/class-surefeedback-admin-api.php';
 	}
 
