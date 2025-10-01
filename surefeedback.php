@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SureFeedback Client Site
  * Plugin URI: http://surefeedback.com
- * Description: Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.
+ * Description: Collect note-style feedback from your client's websites and sync them with your SureFeedback parent project.
  * Author: Brainstorm Force
  * Author URI: https://www.brainstormforce.com
  * Version: 1.2.10
@@ -13,7 +13,7 @@
  * Text Domain: surefeedback
  * Domain Path: languages
  *
- * @package SureFeedback Child
+ * @package SureFeedback
  * @author Brainstorm Force, Andre Gagnon
  */
 
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Setup Constants before init because we're running plugin on plugins_loaded
+ * Setup Constants before init
  *
  * @since 1.0.0
  */
@@ -43,156 +43,243 @@ if ( ! defined( 'SUREFEEDBACK_PLUGIN_FILE' ) ) {
 	define( 'SUREFEEDBACK_PLUGIN_FILE', __FILE__ );
 }
 
-// Load the plugin loader
-require_once 'includes/core/class-surefeedback-loader.php';
+// Plugin Version.
+if ( ! defined( 'SUREFEEDBACK_VERSION' ) ) {
+	define( 'SUREFEEDBACK_VERSION', '1.2.10' );
+}
+
+// Plugin Basename.
+if ( ! defined( 'SUREFEEDBACK_PLUGIN_BASENAME' ) ) {
+	define( 'SUREFEEDBACK_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+}
+
+// Include autoloader.
+require_once SUREFEEDBACK_PLUGIN_DIR . 'includes/class-autoloader.php';
 
 
-if ( ! class_exists( 'SureFeedback' ) ) :
+/**
+ * Main plugin class
+ */
+final class SureFeedback {
+
 	/**
-	 * Main SureFeedback Class
-	 * Uses singleton design pattern
+	 * Plugin version
 	 *
-	 * @since 1.0.0
+	 * @var string
 	 */
-	final class SureFeedback {
+	const VERSION = '1.2.10';
 
-		/**
-		 * Instance of this class
-		 *
-		 * @var SureFeedback
-		 */
-		private static $instance;
+	/**
+	 * Plugin singleton instance
+	 *
+	 * @var SureFeedback
+	 */
+	private static $instance = null;
 
-		/**
-		 * Environment Configuration
-		 *
-		 * To configure the environment mode, define SUREFEEDBACK_MODE in your wp-config.php:
-		 * 
-		 * For development:
-		 * define( 'SUREFEEDBACK_MODE', 'development' );
-		 * 
-		 * For production:
-		 * define( 'SUREFEEDBACK_MODE', 'production' );
-		 * 
-		 * If not defined, defaults to development mode.
-		 */
+	/**
+	 * Plugin directory path
+	 *
+	 * @var string
+	 */
+	private $plugin_path;
+
+	/**
+	 * Plugin directory URL
+	 *
+	 * @var string
+	 */
+	private $plugin_url;
+
+	/**
+	 * Admin menu manager
+	 *
+	 * @var \SureFeedback\Admin\Admin_Menu
+	 */
+	private $admin_menu;
+
+	/**
+	 * REST controller
+	 *
+	 * @var \SureFeedback\API\Rest_Controller
+	 */
+	private $rest_controller;
+
+	/**
+	 * SaaS client
+	 *
+	 * @var \SureFeedback\SaaS\SaaS_Client
+	 */
+	private $saas_client;
+
+	/**
+	 * Environment modes
+	 */
+	const MODE_DEVELOPMENT = 'development';
+	const MODE_PRODUCTION = 'production';
+
+	/**
+	 * API URLs
+	 */
+	const API_URL_LOCAL = 'http://localhost:8000';
+	const API_URL_PRODUCTION = 'https://api.surefeedback.com';
+
+	/**
+	 * App URLs  
+	 */
+	const APP_URL_LOCAL = 'http://localhost:3000';
+	const APP_URL_PRODUCTION = 'https://app.surefeedback.com';
+
+	/**
+	 * Default mode
+	 */
+	const DEFAULT_MODE = self::MODE_DEVELOPMENT;
+
+	/**
+	 * Make sure to whitelist our option names
+	 *
+	 * @var array
+	 */
+	protected $whitelist_option_names = array();
+
+	/**
+	 * Get instance of this class
+	 *
+	 * @return SureFeedback
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Initialize the plugin
+	 */
+	public function __construct() {
+		$this->setup_properties();
+		$this->define_constants();
+		$this->init_hooks();
 		
-		/**
-		 * Environment modes
-		 */
-		const MODE_DEVELOPMENT = 'development';
-		const MODE_PRODUCTION = 'production';
+		// Initialize components after WordPress is loaded
+		add_action('init', array($this, 'includes'), 0);
+	}
 
-		/**
-		 * API URLs
-		 */
-		const API_URL_LOCAL = 'http://localhost:8000';
-		const API_URL_PRODUCTION = 'https://api.surefeedback.com';
+	/**
+	 * Setup plugin properties
+	 */
+	private function setup_properties() {
+		$this->plugin_path = SUREFEEDBACK_PLUGIN_DIR;
+		$this->plugin_url  = SUREFEEDBACK_PLUGIN_URL;
+	}
 
-		/**
-		 * App URLs  
-		 */
-		const APP_URL_LOCAL = 'http://localhost:3000';
-		const APP_URL_PRODUCTION = 'https://app.surefeedback.com';
+	/**
+	 * Define plugin constants
+	 */
+	private function define_constants() {
+		// Environment already defined in global constants
+	}
 
-		/**
-		 * Default mode
-		 */
-		const DEFAULT_MODE = self::MODE_DEVELOPMENT;
-
-		/**
-		 * Make sure to whitelist our option names
-		 *
-		 * @var array
-		 */
-		protected $whitelist_option_names = array();
-
-		/**
-		 * Get instance of this class
-		 *
-		 * @return SureFeedback
-		 */
-		public static function get_instance() {
-			if ( null === self::$instance ) {
-				self::$instance = new self();
-			}
-			return self::$instance;
+	/**
+	 * Include required files and initialize components
+	 */
+	public function includes() {
+		// Initialize admin menu
+		if ( is_admin() ) {
+			$this->admin_menu = new \SureFeedback\Admin\Admin_Menu();
 		}
 
-		/**
-		 * Get things going
-		 */
-		public function __construct() {
+		// Initialize REST controller
+		$this->rest_controller = new \SureFeedback\API\Rest_Controller();
 
-			$this->whitelist_option_names = array(
-				'surefeedback_id'           => array(
-					'description'       => __( 'Website project ID.', 'surefeedback' ),
-					'sanitize_callback' => 'intval',
-				),
-				'surefeedback_api_key'      => array(
-					'description'       => __( 'Public API key for the script loader.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_access_token' => array(
-					'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_parent_url'   => array(
-					'description'       => __( 'Parent Site URL.', 'surefeedback' ),
-					'sanitize_callback' => 'esc_url',
-				),
-				'surefeedback_signature'    => array(
-					'description'       => __( 'Secret signature to verify identity.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_installed'    => array(
-					'description'       => __( 'Is the plugin installed?', 'surefeedback' ),
-					'sanitize_callback' => 'boolval',
-				),
-			);
+		// Initialize SaaS client
+		$this->saas_client = new \SureFeedback\SaaS\SaaS_Client();
 
-			// options and menu.
-			add_action( 'admin_menu', array( $this, 'create_menu' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_menu_styles' ) );
-
-			// whitelist our blog options.
-			add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
-
-			// handle webhook from SureFeedback backend
-			add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
-
-			// inject widget script on frontend for connected sites
-			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
-			
-			// handle automatic verification
-			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
-			add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
-
-			// remove disconnect args after successful disconnect.
-			// add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
-
-			// // AJAX handlers for plugin management
-			// add_action( 'wp_ajax_hfe_recommended_plugin_install', array( $this, 'ajax_install_plugin' ) );
-			// add_action( 'wp_ajax_hfe_recommended_plugin_activate', array( $this, 'ajax_activate_plugin' ) );
-			// add_action( 'wp_ajax_get_plugin_status', array( $this, 'ajax_get_plugin_status' ) );
-
-			// update registration option in database for parent site reference.
-			register_activation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'register_installation' ) );
-			register_deactivation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'deregister_installation' ) );
-
-			// redirect to the options page after activating.
-			add_action( 'activated_plugin', array( $this, 'redirect_options_page' ) );
-
-			// Add settings link to plugins page.
-			add_filter( 'plugin_action_links_' . plugin_basename( SUREFEEDBACK_PLUGIN_FILE ), array( $this, 'add_settings_link' ) );
-
-			// white label text only on plugins page.
-			global $pagenow;
-			if ( is_admin() && 'plugins.php' === $pagenow ) {
-				add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
-			}
-
+		// Initialize frontend manager
+		if ( ! is_admin() ) {
+			$this->frontend_manager = new \SureFeedback\Frontend\Frontend_Manager();
 		}
+	}
+
+	/**
+	 * Initialize hooks
+	 */
+	private function init_hooks() {
+		// Load plugin text domain and setup options after WordPress is ready
+		add_action('init', array($this, 'load_textdomain'));
+		add_action('init', array($this, 'setup_option_whitelist'));
+
+		// Legacy enqueue hooks (for backward compatibility)
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_menu_styles' ) );
+
+		// Whitelist our blog options
+		add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
+
+		// Handle webhook from SureFeedback backend
+		add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
+
+		// Inject widget script on frontend for connected sites
+		add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
+		
+		// Handle automatic verification
+		add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
+		add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
+
+		// Update registration option in database for parent site reference
+		register_activation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'register_installation' ) );
+		register_deactivation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'deregister_installation' ) );
+
+		// Redirect to the options page after activating
+		add_action( 'activated_plugin', array( $this, 'redirect_options_page' ) );
+
+		// Add settings link to plugins page
+		add_filter( 'plugin_action_links_' . plugin_basename( SUREFEEDBACK_PLUGIN_FILE ), array( $this, 'add_settings_link' ) );
+
+		// White label text only on plugins page
+		global $pagenow;
+		if ( is_admin() && 'plugins.php' === $pagenow ) {
+			add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
+		}
+	}
+
+	/**
+	 * Load plugin text domain
+	 */
+	public function load_textdomain() {
+		load_plugin_textdomain('surefeedback', false, dirname(plugin_basename(__FILE__)) . '/languages');
+	}
+
+	/**
+	 * Setup option whitelist
+	 */
+	public function setup_option_whitelist() {
+		$this->whitelist_option_names = array(
+			'surefeedback_id'           => array(
+				'description'       => __( 'Website project ID.', 'surefeedback' ),
+				'sanitize_callback' => 'intval',
+			),
+			'surefeedback_api_key'      => array(
+				'description'       => __( 'Public API key for the script loader.', 'surefeedback' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'surefeedback_access_token' => array(
+				'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'surefeedback' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'surefeedback_parent_url'   => array(
+				'description'       => __( 'Parent Site URL.', 'surefeedback' ),
+				'sanitize_callback' => 'esc_url',
+			),
+			'surefeedback_signature'    => array(
+				'description'       => __( 'Secret signature to verify identity.', 'surefeedback' ),
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'surefeedback_installed'    => array(
+				'description'       => __( 'Is the plugin installed?', 'surefeedback' ),
+				'sanitize_callback' => 'boolval',
+			),
+		);
+	}
 
 		/**
 		 * Get current environment mode
@@ -334,65 +421,6 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			return $options;
 		}
 
-		/**
-		 * Create Menu
-		 *
-		 * @return void
-		 */
-		public function create_menu() {
-			$plugin_name = get_option( 'surefeedback_plugin_name', false );
-			$menu_title = $plugin_name ? esc_html( $plugin_name ) : __( 'SureFeedback', 'surefeedback' );
-			
-			// Add main menu page
-			add_menu_page(
-				__( 'SureFeedback', 'surefeedback' ), // Page title
-				$menu_title, // Menu title
-				'manage_options', // Capability
-				'surefeedback', // Menu slug
-				array( $this, 'main_page' ), // Function
-				$this->get_menu_icon(), // Icon
-				58 // Position (after Settings)
-			);
-			
-			// Add dashboard submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Dashboard', 'surefeedback' ), // Page title
-				__( 'Dashboard', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-			
-			// Add settings submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Settings', 'surefeedback' ), // Page title
-				__( 'Settings', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback#settings', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-
-			// Add settings submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Connection', 'surefeedback' ), // Page title
-				__( 'Connection', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback#connection', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-			
-			// Keep the old settings page for backward compatibility
-			add_options_page(
-				__( 'Feedback Connection', 'surefeedback' ),
-				$menu_title,
-				'manage_options',
-				'feedback-connection-options',
-				array( $this, 'options_page' )
-			);
-		}
 
 		/**
 		 * Get menu icon for SureFeedback
@@ -1256,8 +1284,5 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		}
 	}
 
-	// Initialize the plugin loader
-	SureFeedback_Loader::get_instance();
-	
-	SureFeedback::get_instance();
-endif;
+// Initialize the plugin
+SureFeedback::get_instance();
