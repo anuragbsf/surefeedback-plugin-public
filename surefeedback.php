@@ -86,10 +86,6 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * Get things going
 		 */
 		public function __construct() {
-			if ( defined( 'PH_VERSION' ) ) {
-				add_action( 'admin_notices', array( $this, 'parent_plugin_activated_error_notice' ) );
-				return;
-			}
 
 			$this->whitelist_option_names = array(
 				'surefeedback_id'           => array(
@@ -125,9 +121,6 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// whitelist our blog options.
 			add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
 
-			// maybe disconnect from parent site.
-			add_action( 'admin_init', array( $this, 'maybe_disconnect' ) );
-
 			// handle webhook from SureFeedback backend
 			add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
 
@@ -139,7 +132,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
 
 			// remove disconnect args after successful disconnect.
-			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
+			// add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
 
 			// // AJAX handlers for plugin management
 			// add_action( 'wp_ajax_hfe_recommended_plugin_install', array( $this, 'ajax_install_plugin' ) );
@@ -160,102 +153,8 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			global $pagenow;
 			if ( is_admin() && 'plugins.php' === $pagenow ) {
 				add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
-				add_filter( 'plugin_row_meta', array( $this, 'white_label_link' ), 10, 4 );
 			}
 
-			// add_filter( 'ph_script_should_start_loading', array( $this, 'compatiblity_blacklist' ) );
-		}
-
-		/**
-		 * Checks compatibility blacklist.
-		 *
-		 * @param string $load Specifies if script should start loading.
-		 *
-		 * @return bool|string
-		 */
-		public function compatiblity_blacklist( $load ) {
-			$disabled = apply_filters(
-				'ph_disable_for_query_vars',
-				array(
-					// divi.
-					'et_fb',
-					// elementor.
-					'elementor-preview',
-					// beaver builder.
-					'fl_builder',
-					'fl_builder_preview',
-					// fusion.
-					'builder',
-					'fb-edit',
-				)
-			);
-
-			// disable these.
-			if ( ! empty( $_GET ) && is_array( $_GET ) ) {
-				foreach ( $_GET as $arg => $_ ) {
-					if ( in_array( $arg, $disabled ) ) {
-						return false;
-					}
-				}
-			}
-
-			// oxygen is... "special".
-			if ( isset( $_GET['ct_builder'] ) ) {
-				return false; // TODO: remove once we can get pageX, pageY inside iframe.
-				// bail if admin commenting is disabled.
-				if ( ! get_option( 'surefeedback_admin', false ) ) {
-					return false;
-				}
-				// bail if not in the iframe.
-				if ( ! isset( $_GET['oxygen_iframe'] ) ) {
-					return false;
-				}
-			}
-
-			return $load;
-		}
-
-		/**
-		 * Show parent plugin activation notice.
-		 *
-		 * @return void
-		 */
-		public function parent_plugin_activated_error_notice() {
-			$message = __( 'You have both the client site and SureFeedback core plugins activated. You must only activate the client site on a client site, and SureFeedback on your main site.', 'surefeedback' );
-			echo '<div class="error"> <p>' . esc_html( $message ) . '</p></div>';
-		}
-
-		/**
-		 * Show white label link.
-		 *
-		 * @param string $plugin_meta Specifies Plugin meta data.
-		 * @param string $plugin_file Specifies Plugin file.
-		 * @param string $plugin_data Specifies Plugin data.
-		 * @param string $status Specifies Plugin status.
-		 *
-		 * @return string
-		 */
-		public function white_label_link( $plugin_meta, $plugin_file, $plugin_data, $status ) {
-			global $pagenow;
-			if ( ! is_admin() || 'plugins.php' !== $pagenow ) {
-				return $plugin_meta;
-			}
-			if ( ! isset( $plugin_data['slug'] ) ) {
-				return $plugin_meta;
-			}
-			if ( 'projecthuddle-child-site' === $plugin_data['slug'] ) {
-				$link       = get_option( 'surefeedback_plugin_link', '' );
-				$author     = get_option( 'surefeedback_plugin_author', '' );
-				$author_url = get_option( 'surefeedback_plugin_author_url', '' );
-				if ( $link ) {
-					$plugin_meta[2] = '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html__( 'Visit plugin site', 'surefeedback' ) . '</a>';
-				}
-
-				if ( $author && $author_url ) {
-					$plugin_meta[1] = '<a href="' . esc_url( $author_url ) . '" target="_blank">' . esc_html( $author ) . '</a>';
-				}
-			}
-			return $plugin_meta;
 		}
 
 		/**
@@ -315,40 +214,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			return $links;
 		}
 
-		/**
-		 * Make sure these are automatically removed after save
-		 *
-		 * @param array $args Passes disconnect args.
-		 *
-		 * @return array
-		 */
-		public function remove_disconnect_args( $args ) {
-			array_push( $args, 'surefeedback-site-disconnect-nonce' );
-			array_push( $args, 'surefeedback-site-disconnect' );
-			return $args;
-		}
-
-		/**
-		 * Maybe disconnect from parent site
-		 *
-		 * @return void
-		 */
-		public function maybe_disconnect() {
-			if ( ! isset( $_GET['surefeedback-site-disconnect'] ) ) {
-				return;
-			}
-
-			// nonce check.
-			if ( ! isset( $_GET['surefeedback-site-disconnect-nonce'] ) || ! wp_verify_nonce( $_GET['surefeedback-site-disconnect-nonce'], 'surefeedback-site-disconnect-nonce' ) ) {
-				wp_die( 'That\'s not allowed' );
-			}
-
-			foreach ( $this->whitelist_option_names as $name => $items ) {
-				delete_option( $name );
-			}
-
-			wp_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) );
-		}
+	
 
 		/**
 		 * Redirect to options page.
@@ -1226,156 +1092,6 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			
 			// Enqueue dashicons for icons
 			wp_enqueue_style( 'dashicons' );
-		}
-
-		/**
-		 * Check if valid cookie is available.
-		 *
-		 * @return bool
-		 */
-		public function has_valid_cookie() {
-			$token = get_option( 'surefeedback_access_token', '' );
-			if ( ! $token ) {
-				return false;
-			}
-
-			// get token from url.
-			$url_token = isset( $_GET['ph_access_token'] ) ? sanitize_text_field( $_GET['ph_access_token'] ) : '';
-
-			if ( ! $url_token ) {
-				if ( isset( $_COOKIE['ph_access_token'] ) ) {
-					$url_token = $_COOKIE['ph_access_token'];
-				}
-			}
-
-			return $url_token === $token;
-		}
-
-
-		/**
-		 * AJAX handler for plugin installation
-		 *
-		 * @return void
-		 */
-		public function ajax_install_plugin() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['_ajax_nonce'], 'surefeedback_installer_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'install_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to install plugins.' );
-			}
-
-			$slug = sanitize_text_field( $_POST['slug'] );
-			
-			include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
-			include_once ABSPATH . 'wp-admin/includes/file.php';
-			include_once ABSPATH . 'wp-admin/includes/misc.php';
-			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-
-			$api = plugins_api( 'plugin_information', array( 'slug' => $slug ) );
-
-			if ( is_wp_error( $api ) ) {
-				wp_send_json_error( array( 'message' => 'Plugin not found' ) );
-				return;
-			}
-
-			$upgrader = new Plugin_Upgrader( new WP_Ajax_Upgrader_Skin() );
-			$result = $upgrader->install( $api->download_link );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-			} else {
-				// Activate plugin after installation
-				$plugin_file = $upgrader->plugin_info();
-				if ( $plugin_file ) {
-					$activate_result = activate_plugin( $plugin_file );
-					if ( is_wp_error( $activate_result ) ) {
-						wp_send_json_success( array( 
-							'message' => 'Plugin installed but activation failed',
-							'errorCode' => 'activation_failed'
-						) );
-					} else {
-						wp_send_json_success( array( 'message' => 'Plugin installed and activated successfully' ) );
-					}
-				} else {
-					wp_send_json_success( array( 'message' => 'Plugin installed successfully' ) );
-				}
-			}
-		}
-
-		/**
-		 * AJAX handler for plugin activation
-		 *
-		 * @return void
-		 */
-		public function ajax_activate_plugin() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'activate_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to activate plugins.' );
-			}
-
-			$plugin = sanitize_text_field( $_POST['plugin'] );
-			
-			$result = activate_plugin( $plugin );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-			} else {
-				wp_send_json_success( array( 'message' => 'Plugin activated successfully' ) );
-			}
-		}
-
-		/**
-		 * AJAX handler to get plugin status
-		 *
-		 * @return void
-		 */
-		public function ajax_get_plugin_status() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'activate_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to check plugin status.' );
-			}
-
-			// Include required WordPress files
-			if ( ! function_exists( 'get_plugins' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
-			}
-
-			$plugin_list = array(
-				'surerank/surerank.php',
-				'surecart/surecart.php', 
-				'sureforms/sureforms.php',
-				'presto-player/presto-player.php',
-				'suretriggers/suretriggers.php'
-			);
-
-			$status_map = array();
-			$installed_plugins = get_plugins();
-
-			foreach ( $plugin_list as $plugin ) {
-				if ( ! isset( $installed_plugins[ $plugin ] ) ) {
-					$status_map[ $plugin ] = 'Install';
-				} elseif ( is_plugin_active( $plugin ) ) {
-					$status_map[ $plugin ] = 'Activated';
-				} else {
-					$status_map[ $plugin ] = 'Installed';
-				}
-			}
-
-			wp_send_json_success( $status_map );
 		}
 
 		/**
