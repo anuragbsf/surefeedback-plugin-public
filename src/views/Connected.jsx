@@ -54,12 +54,12 @@ const Connected = () => {
   return (
     <div className="flex justify-center items-start min-h-screen">
       <div className="bg-white shadow-md rounded-2xl p-8 max-w-lg w-full text-center">
-        <div className="text-3xl mb-3">🎉</div>
+        <div className="text-2xl mb-1">🎉</div>
         <div className="flex flex-col items-center justify-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-xl font-semibold m-0 text-gray-800">
             {__("Website Connected Successfully!", "surefeedback")}
           </h2>
-          <p className="text-gray-500 mb-6 text-sm w-80 text-center flex items-center">
+          <p className="text-gray-500 mb-3 text-sm w-80 text-center flex items-center">
             {__(
               "Your site is now linked with SureFeedback. Start gathering client feedback without friction.",
               "surefeedback"
@@ -67,7 +67,21 @@ const Connected = () => {
           </p>
         </div>
 
-        <div className="border rounded-lg mb-6 px-4 py-3 flex items-center justify-center">
+        <div 
+          className="rounded-lg mb-6 px-4 py-3 mx-auto flex items-center text-center w-full justify-center" 
+          style={{
+            border: '2px solid #E5E7EB',
+            paddingTop: '20px',
+            paddingBottom: '20px',
+            width: '340px',
+            // marginRights: '10px',
+            // marginTop: '16px',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }}
+        >
           <div className="grid grid-cols-2 gap-y-3 text-left">
             <span className="font-medium">Connection Site:</span>
             <span className="text-gray-700">https://example.com</span>
@@ -103,12 +117,26 @@ const Connected = () => {
         )}
 
         <div className="flex justify-center gap-4">
-          <Button variant="primary" onClick={handleGoToDashboard}>
+          <Button variant="ghost"  style={{
+            border: '2px solid #D1D5DB',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }} 
+          onClick={handleGoToDashboard}>
             {__("Go to Dashboard", "surefeedback")}
           </Button>
           <Button
-            variant="destructive"
-            className="!bg-red-50 !text-red-600 !border !border-red-300 hover:!bg-red-100"
+            variant="ghost"
+            style={{
+            border: '2px solid #D62626',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }} 
+            className="!bg-white !text-red-600 !border rounded-lg !border-red-600 hover:!bg-red-100"
             onClick={handleDisconnect}
             disabled={isDisconnecting}
           >
