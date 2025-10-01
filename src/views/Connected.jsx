@@ -47,7 +47,8 @@ const Connected = () => {
   };
 
   const handleGoToDashboard = () => {
-    window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback`;
+    const appUrl = window.sureFeedbackAdmin?.connection?.app_url || 'http://localhost:3000';
+      window.location.href = `${appUrl}/sites`;
   };
 
   return (

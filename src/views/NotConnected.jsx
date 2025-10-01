@@ -21,7 +21,7 @@ const NotConnected = ({ setIsStarted }) => {
         <Button 
           variant="primary"
           size="lg"
-          onClick={() => setIsStarted(true)}
+          onClick={() =>  authenticateRedirect()}
           className="px-8 w-full"
         >
           {__("Connect Website", "text-domain")}

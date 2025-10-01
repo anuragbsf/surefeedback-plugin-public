@@ -64,6 +64,43 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		private static $instance;
 
 		/**
+		 * Environment Configuration
+		 *
+		 * To configure the environment mode, define SUREFEEDBACK_MODE in your wp-config.php:
+		 * 
+		 * For development:
+		 * define( 'SUREFEEDBACK_MODE', 'development' );
+		 * 
+		 * For production:
+		 * define( 'SUREFEEDBACK_MODE', 'production' );
+		 * 
+		 * If not defined, defaults to development mode.
+		 */
+		
+		/**
+		 * Environment modes
+		 */
+		const MODE_DEVELOPMENT = 'development';
+		const MODE_PRODUCTION = 'production';
+
+		/**
+		 * API URLs
+		 */
+		const API_URL_LOCAL = 'http://localhost:8000';
+		const API_URL_PRODUCTION = 'https://api.surefeedback.com';
+
+		/**
+		 * App URLs  
+		 */
+		const APP_URL_LOCAL = 'http://localhost:3000';
+		const APP_URL_PRODUCTION = 'https://app.surefeedback.com';
+
+		/**
+		 * Default mode
+		 */
+		const DEFAULT_MODE = self::MODE_DEVELOPMENT;
+
+		/**
 		 * Make sure to whitelist our option names
 		 *
 		 * @var array
@@ -155,6 +192,37 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 				add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
 			}
 
+		}
+
+		/**
+		 * Get current environment mode
+		 *
+		 * @return string
+		 */
+		public function get_environment_mode() {
+			return defined( 'SUREFEEDBACK_MODE' ) ? SUREFEEDBACK_MODE : self::DEFAULT_MODE;
+		}
+
+		/**
+		 * Get API URL based on environment
+		 *
+		 * @return string
+		 */
+		public function get_api_url() {
+			return $this->get_environment_mode() === self::MODE_PRODUCTION 
+				? self::API_URL_PRODUCTION 
+				: self::API_URL_LOCAL;
+		}
+
+		/**
+		 * Get App URL based on environment
+		 *
+		 * @return string
+		 */
+		public function get_app_url() {
+			return $this->get_environment_mode() === self::MODE_PRODUCTION 
+				? self::APP_URL_PRODUCTION 
+				: self::APP_URL_LOCAL;
 		}
 
 		/**
@@ -417,11 +485,11 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 						'site_token'       => get_option( 'surefeedback_site_token', '' ) ?: get_option( 'surefeedback_api_key', '' ),
 						'api_token'        => get_option( 'surefeedback_api_key', '' ),
 						'site_domain'      => parse_url( home_url(), PHP_URL_HOST ),
-						'api_url'          => 'http://localhost:8000/api/v1',
+						'api_url'          => $this->get_api_url() . '/api/v1',
 						'user_token'       => get_option( 'surefeedback_user_token', '' ),
 						// Connection data for auth.js
 						'connection' => array(
-							'app_url'          => 'http://localhost:3000',
+							'app_url'          => $this->get_app_url(),
 							'callback_url'     => admin_url('admin.php?page=surefeedback&action=callback'),
 							'site_data' => array(
 								'domain'           => parse_url(home_url(), PHP_URL_HOST),
