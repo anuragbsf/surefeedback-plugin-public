@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: SureFeedback Client Site
+ * Plugin Name: SureFeedback Client
  * Plugin URI: http://surefeedback.com
  * Description: Collect note-style feedback from your client's websites and sync them with your SureFeedback parent project.
  * Author: Brainstorm Force
  * Author URI: https://www.brainstormforce.com
- * Version: 1.2.10
+ * Version: 1.0.0
  *
  * Requires at least: 4.7
  * Tested up to: 6.8
@@ -14,7 +14,7 @@
  * Domain Path: languages
  *
  * @package SureFeedback
- * @author Brainstorm Force, Andre Gagnon
+ * @author Brainstorm Force
  */
 
 // Exit if accessed directly.
@@ -45,7 +45,7 @@ if ( ! defined( 'SUREFEEDBACK_PLUGIN_FILE' ) ) {
 
 // Plugin Version.
 if ( ! defined( 'SUREFEEDBACK_VERSION' ) ) {
-	define( 'SUREFEEDBACK_VERSION', '1.2.10' );
+	define( 'SUREFEEDBACK_VERSION', '1.0.0' );
 }
 
 // Plugin Basename.
@@ -61,13 +61,6 @@ require_once SUREFEEDBACK_PLUGIN_DIR . 'includes/class-autoloader.php';
  * Main plugin class
  */
 final class SureFeedback {
-
-	/**
-	 * Plugin version
-	 *
-	 * @var string
-	 */
-	const VERSION = '1.2.10';
 
 	/**
 	 * Plugin singleton instance
@@ -468,9 +461,14 @@ final class SureFeedback {
 	 * @return array
 	 */
 	public function verify_script_integration() {
+		error_log('SureFeedback: Main plugin verify_script_integration() called');
 		if ( $this->saas_client ) {
-			return $this->saas_client->verify_script_integration();
+			error_log('SureFeedback: SaaS client exists, calling verify_script_integration()');
+			$result = $this->saas_client->verify_script_integration();
+			error_log('SureFeedback: Verification result: ' . print_r($result, true));
+			return $result;
 		}
+		error_log('SureFeedback: ERROR - SaaS client not initialized in verify_script_integration()');
 		return array(
 			'success' => false,
 			'message' => 'SaaS client not initialized',
