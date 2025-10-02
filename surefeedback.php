@@ -371,8 +371,12 @@ final class SureFeedback {
 		 * @return void
 		 */
 		public function redirect_options_page( $plugin ) {
-			if ( plugin_basename( __FILE__ ) == $plugin ) {
+			$connection = get_option( 'surefeedback_connection_status', false );
+			if ( plugin_basename( __FILE__ ) == $plugin && ($connection !== 'connected')) {
 				exit( wp_redirect( admin_url( 'admin.php?page=surefeedback#setup-wizard' ) ) );
+			}
+			else{
+				exit( wp_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) ) );
 			}
 		}
 
