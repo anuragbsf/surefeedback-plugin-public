@@ -232,6 +232,8 @@ class SaaS_Client
     {
         // Reset attempt counter when starting new verification cycle
         update_option('surefeedback_verification_attempts', 0);
+        update_option('surefeedback_verification_status', 'pending');
+        error_log('SureFeedback: Reset verification attempts to 0');
         
         // Schedule initial verification after a short delay
         wp_schedule_single_event(time() + 1, 'surefeedback_auto_verify');
