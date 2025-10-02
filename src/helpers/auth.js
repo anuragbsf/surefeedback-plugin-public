@@ -39,11 +39,8 @@ export const authenticateRedirect = () => {
   sessionStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
   localStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
   
-  console.log('Redirecting to:', connectUrl);
-  console.log('Connection intent stored:', connectionIntent);
-  
   // Redirect to parent site for authentication
-  window.open(connectUrl, '_self');
+  window.open(connectUrl, '_blank');
 };
 
 export const reconnectSite = () => {
