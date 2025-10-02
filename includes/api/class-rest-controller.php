@@ -365,7 +365,7 @@ class Rest_Controller extends WP_REST_Controller
 
             // Update verification and connection status
             update_option('surefeedback_verification_status', 'failed');
-            update_option('surefeedback_connection_status', 'not_connected');
+            // update_option('surefeedback_connection_status', 'not_connected');
             
             // Clear any transients related to SureFeedback
             delete_transient('surefeedback_connection_test');
@@ -453,6 +453,8 @@ class Rest_Controller extends WP_REST_Controller
             'surefeedback_widget_enabled' => true,
             'surefeedback_access_token' => sanitize_text_field($params['site_token']),
             'surefeedback_parent_url' => 'http://localhost:8000',
+            'surefeedback_verification_status' => 'pending',
+            'surefeedback_verification_attempts' => 0,
         );
 
         foreach ($connection_data as $key => $value) {
