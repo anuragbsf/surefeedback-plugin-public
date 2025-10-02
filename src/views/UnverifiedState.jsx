@@ -9,7 +9,7 @@ const UnverifiedState = () => {
     if (verificationStatus === 'pending') {
       // Go to dashboard
       const appUrl = window.sureFeedbackAdmin?.connection?.app_url || 'http://localhost:3000';
-      window.location.href = `${appUrl}/sites`;
+      window.open(`${appUrl}/sites`, '_blank');
     } else if (verificationStatus === 'failed') {
       // Reconnect
       window.location.reload();

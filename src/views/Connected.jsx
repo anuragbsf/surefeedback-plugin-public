@@ -48,7 +48,7 @@ const Connected = () => {
 
   const handleGoToDashboard = () => {
     const appUrl = window.sureFeedbackAdmin?.connection?.app_url || 'http://localhost:3000';
-      window.location.href = `${appUrl}/sites`;
+    window.open(`${appUrl}/sites`, '_blank');
   };
 
   return (
