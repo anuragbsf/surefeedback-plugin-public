@@ -112,6 +112,13 @@ final class SureFeedback {
 	private $saas_client;
 
 	/**
+	 * Frontend manager
+	 *
+	 * @var \SureFeedback\Frontend\Frontend_Manager
+	 */
+	private $frontend_manager;
+
+	/**
 	 * Environment modes
 	 */
 	const MODE_DEVELOPMENT = 'development';
@@ -440,6 +447,7 @@ final class SureFeedback {
 		} else {
 			error_log('SureFeedback: ERROR - SaaS client not initialized!');
 		}
+	}
 
 	/**
 	 * Perform hourly verification update to keep database fresh
@@ -451,6 +459,7 @@ final class SureFeedback {
 		if ( $this->saas_client ) {
 			$this->saas_client->perform_hourly_verification_update();
 		}
+	}
 
 	/**
 	 * Verify script integration with SaaS platform
