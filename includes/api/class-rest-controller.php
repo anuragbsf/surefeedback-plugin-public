@@ -353,7 +353,6 @@ class Rest_Controller extends WP_REST_Controller
                 'surefeedback_script_token',
                 'surefeedback_site_token',
                 'surefeedback_verification_status',
-                'surefeedback_connection_status',
             );
 
             $cleared_options = 0;
@@ -365,7 +364,6 @@ class Rest_Controller extends WP_REST_Controller
 
             // Update verification and connection status
             update_option('surefeedback_verification_status', 'failed');
-            // update_option('surefeedback_connection_status', 'not_connected');
             
             // Clear any transients related to SureFeedback
             delete_transient('surefeedback_connection_test');
@@ -438,9 +436,14 @@ class Rest_Controller extends WP_REST_Controller
     private function process_successful_connection($params)
     {
         // Sanitize and save connection data
+        // Get the SureFeedback instance to determine proper parent URL
+        $surefeedback = \SureFeedback::get_instance();
+        $parent_url = $params['parent_url'] ?? $surefeedback->get_api_url();
+        
         $connection_data = array(
             'surefeedback_site_token' => sanitize_text_field($params['site_token']),
             'surefeedback_script_token' => sanitize_text_field($params['script_token'] ?? $params['site_token']),
+            'surefeedback_api_key' => sanitize_text_field($params['site_token']),
             'surefeedback_id' => sanitize_text_field($params['site_id'] ?? ''),
             'surefeedback_site_id' => sanitize_text_field($params['site_id'] ?? ''),
             'surefeedback_organization_id' => sanitize_text_field($params['organization_id'] ?? ''),
@@ -452,7 +455,7 @@ class Rest_Controller extends WP_REST_Controller
             'surefeedback_connection_status' => 'connected',
             'surefeedback_widget_enabled' => true,
             'surefeedback_access_token' => sanitize_text_field($params['site_token']),
-            'surefeedback_parent_url' => 'http://localhost:8000',
+            'surefeedback_parent_url' => esc_url_raw($parent_url),
             'surefeedback_verification_status' => 'pending',
             'surefeedback_verification_attempts' => 0,
         );
@@ -482,8 +485,10 @@ class Rest_Controller extends WP_REST_Controller
      */
     public function verify_integration($request)
     {
+        error_log('SureFeedback: Manual verification triggered via REST API');
         $surefeedback = \SureFeedback::get_instance();
         $result = $surefeedback->verify_script_integration();
+        error_log('SureFeedback: Manual verification result: ' . print_r($result, true));
         
         return rest_ensure_response($result);
     }
