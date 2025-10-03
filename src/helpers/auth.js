@@ -84,7 +84,7 @@ export const reconnectSite = () => {
   console.log('Reconnection intent stored:', connectionIntent);
   
   // Redirect to SaaS platform for reconnection
-  window.open(reconnectUrl, '_self');
+  window.open(reconnectUrl, '_blank');
 };
 
 export const disconnectSite = async () => {
