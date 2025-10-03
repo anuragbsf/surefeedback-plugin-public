@@ -207,11 +207,6 @@ final class SureFeedback {
 	private function init_hooks() {
 		// Load plugin text domain and setup options after WordPress is ready
 		add_action( 'init', array( $this, 'load_textdomain' ) );
-		add_action( 'init', array( $this, 'setup_option_whitelist' ) );
-
-		// Whitelist our blog options
-		add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
-
 
 		// Handle automatic verification using SaaS client
 		add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
@@ -239,38 +234,6 @@ final class SureFeedback {
 	 */
 	public function load_textdomain() {
 		load_plugin_textdomain('surefeedback', false, dirname(plugin_basename(__FILE__)) . '/languages');
-	}
-
-	/**
-	 * Setup option whitelist
-	 */
-	public function setup_option_whitelist() {
-		$this->whitelist_option_names = array(
-			'surefeedback_id'           => array(
-				'description'       => __( 'Website project ID.', 'surefeedback' ),
-				'sanitize_callback' => 'intval',
-			),
-			'surefeedback_api_key'      => array(
-				'description'       => __( 'Public API key for the script loader.', 'surefeedback' ),
-				'sanitize_callback' => 'sanitize_text_field',
-			),
-			'surefeedback_access_token' => array(
-				'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'surefeedback' ),
-				'sanitize_callback' => 'sanitize_text_field',
-			),
-			'surefeedback_parent_url'   => array(
-				'description'       => __( 'Parent Site URL.', 'surefeedback' ),
-				'sanitize_callback' => 'esc_url',
-			),
-			'surefeedback_signature'    => array(
-				'description'       => __( 'Secret signature to verify identity.', 'surefeedback' ),
-				'sanitize_callback' => 'sanitize_text_field',
-			),
-			'surefeedback_installed'    => array(
-				'description'       => __( 'Is the plugin installed?', 'surefeedback' ),
-				'sanitize_callback' => 'boolval',
-			),
-		);
 	}
 
 		/**
@@ -321,13 +284,13 @@ final class SureFeedback {
 			// make the changes to the text.
 			if ( 'surefeedback' === $domain ) { // added this check to avoid conflicting other plugins.
 				switch ( $untranslated_text ) {
-					case 'SureFeedback Client Site':
+					case 'SureFeedback Client':
 						$name = get_option( 'surefeedback_plugin_name', false );
 						if ( $name ) {
 							$translated_text = $name;
 						}
 						break;
-					case 'Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.':
+					case 'Collect note-style feedback from your client\'s websites and sync them with your SureFeedback parent project.';
 						$description = get_option( 'surefeedback_plugin_description', false );
 						if ( $description ) {
 							$translated_text = $description;
@@ -339,10 +302,22 @@ final class SureFeedback {
 							$translated_text = $author;
 						}
 						break;
+					case 'https://www.brainstormforce.com':
+						$author_url = get_option( 'surefeedback_plugin_author_url', false );
+						if ( $author_url ) {
+							$translated_text = $author_url;
+						}
+						break;
+					case 'http://surefeedback.com':
+						$plugin_link = get_option( 'surefeedback_plugin_link', false );
+						if ( $plugin_link ) {
+							$translated_text = $plugin_link;
+						}
+						break;
 					// add more items.
+					
 				}
 			}
-
 			return $translated_text;
 		}
 
@@ -396,25 +371,6 @@ final class SureFeedback {
 		 */
 		public function deregister_installation() {
 			delete_option( 'surefeedback_installed' );
-		}
-
-		/**
-		 * Whitelist our option in xmlrpc
-		 *
-		 * @param array $options whitelabel options.
-		 *
-		 * @return array
-		 */
-		public function whitelist_option( $options ) {
-			foreach ( $this->whitelist_option_names as $name => $item ) {
-				$options[ $name ] = array(
-					'desc'     => esc_html( $item['description'] ),
-					'readonly' => false,
-					'option'   => $name,
-				);
-			}
-
-			return $options;
 		}
 
 
