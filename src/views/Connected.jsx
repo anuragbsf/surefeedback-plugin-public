@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "@bsf/force-ui";
+import { Button, Dialog } from "@bsf/force-ui";
 import { __ } from "@wordpress/i18n";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { disconnectSite } from "../helpers/auth";
@@ -8,17 +8,15 @@ const Connected = () => {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectStatus, setDisconnectStatus] = useState(null); // null, 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleDisconnect = async () => {
+  const handleDisconnectClick = () => {
     if (isDisconnecting) return;
+    setIsDialogOpen(true);
+  };
 
-    // Show confirmation dialog
-    const confirmed = confirm(
-      __("Are you sure you want to disconnect this site from SureFeedback? This will deactivate the widget and clear all connection data.", "surefeedback")
-    );
-
-    if (!confirmed) return;
-
+  const confirmDisconnect = async () => {
+    setIsDialogOpen(false);
     setIsDisconnecting(true);
     setDisconnectStatus(null);
     setErrorMessage('');
@@ -137,7 +135,7 @@ const Connected = () => {
             boxShadow: 'none',
           }} 
             className="!bg-white !text-red-600 !border rounded-lg !border-red-600 hover:!bg-red-100"
-            onClick={handleDisconnect}
+            onClick={handleDisconnectClick}
             disabled={isDisconnecting}
           >
             {isDisconnecting ? (
@@ -151,6 +149,37 @@ const Connected = () => {
           </Button>
         </div>
       </div>
+      
+      <Dialog
+        design="simple"
+        open={isDialogOpen}
+        setOpen={setIsDialogOpen}
+      >
+        <Dialog.Backdrop />
+        <Dialog.Panel>
+          <Dialog.Header>
+            <div className="flex items-center justify-between">
+              <Dialog.Title>
+                {__("Disconnect Site", "surefeedback")}
+              </Dialog.Title>
+            </div>
+            <Dialog.Description>
+              {__("Are you sure you want to disconnect this site from SureFeedback? This will deactivate the widget and clear all connection data.", "surefeedback")}
+            </Dialog.Description>
+          </Dialog.Header>
+          <Dialog.Footer>
+            <Button onClick={confirmDisconnect}>
+              {__("Yes, Disconnect", "surefeedback")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              {__("Cancel", "surefeedback")}
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Panel>
+      </Dialog>
     </div>
   );
 };
