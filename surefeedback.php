@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: SureFeedback Client Site
+ * Plugin Name: SureFeedback Client
  * Plugin URI: http://surefeedback.com
- * Description: Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.
+ * Description: Collect note-style feedback from your client's websites and sync them with your SureFeedback parent project.
  * Author: Brainstorm Force
  * Author URI: https://www.brainstormforce.com
- * Version: 1.2.10
+ * Version: 1.0.0
  *
  * Requires at least: 4.7
  * Tested up to: 6.8
@@ -13,8 +13,8 @@
  * Text Domain: surefeedback
  * Domain Path: languages
  *
- * @package SureFeedback Child
- * @author Brainstorm Force, Andre Gagnon
+ * @package SureFeedback
+ * @author Brainstorm Force
  */
 
 // Exit if accessed directly.
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Setup Constants before init because we're running plugin on plugins_loaded
+ * Setup Constants before init
  *
  * @since 1.0.0
  */
@@ -43,240 +43,228 @@ if ( ! defined( 'SUREFEEDBACK_PLUGIN_FILE' ) ) {
 	define( 'SUREFEEDBACK_PLUGIN_FILE', __FILE__ );
 }
 
-// Load the plugin loader
-require_once 'includes/core/class-surefeedback-loader.php';
+// Plugin Version.
+if ( ! defined( 'SUREFEEDBACK_VERSION' ) ) {
+	define( 'SUREFEEDBACK_VERSION', '1.0.0' );
+}
+
+// Plugin Basename.
+if ( ! defined( 'SUREFEEDBACK_PLUGIN_BASENAME' ) ) {
+	define( 'SUREFEEDBACK_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+}
+
+// Include autoloader.
+require_once SUREFEEDBACK_PLUGIN_DIR . 'includes/class-autoloader.php';
 
 
-if ( ! class_exists( 'SureFeedback' ) ) :
+/**
+ * Main plugin class
+ */
+final class SureFeedback {
+
 	/**
-	 * Main SureFeedback Class
-	 * Uses singleton design pattern
+	 * Plugin singleton instance
 	 *
-	 * @since 1.0.0
+	 * @var SureFeedback
 	 */
-	final class SureFeedback {
+	private static $instance = null;
 
-		/**
-		 * Instance of this class
-		 *
-		 * @var SureFeedback
-		 */
-		private static $instance;
+	/**
+	 * Plugin directory path
+	 *
+	 * @var string
+	 */
+	private $plugin_path;
 
-		/**
-		 * Make sure to whitelist our option names
-		 *
-		 * @var array
-		 */
-		protected $whitelist_option_names = array();
+	/**
+	 * Plugin directory URL
+	 *
+	 * @var string
+	 */
+	private $plugin_url;
 
-		/**
-		 * Get instance of this class
-		 *
-		 * @return SureFeedback
-		 */
-		public static function get_instance() {
-			if ( null === self::$instance ) {
-				self::$instance = new self();
-			}
-			return self::$instance;
+	/**
+	 * Admin menu manager
+	 *
+	 * @var \SureFeedback\Admin\Admin_Menu
+	 */
+	private $admin_menu;
+
+	/**
+	 * REST controller
+	 *
+	 * @var \SureFeedback\API\Rest_Controller
+	 */
+	private $rest_controller;
+
+	/**
+	 * SaaS client
+	 *
+	 * @var \SureFeedback\SaaS\SaaS_Client
+	 */
+	private $saas_client;
+
+	/**
+	 * Frontend manager
+	 *
+	 * @var \SureFeedback\Frontend\Frontend_Manager
+	 */
+	private $frontend_manager;
+
+	/**
+	 * Environment modes
+	 */
+	const MODE_DEVELOPMENT = 'development';
+	const MODE_PRODUCTION = 'production';
+
+	/**
+	 * API URLs
+	 */
+	const API_URL_LOCAL = 'http://localhost:8000';
+	const API_URL_PRODUCTION = 'https://api.surefeedback.com';
+
+	/**
+	 * App URLs  
+	 */
+	const APP_URL_LOCAL = 'http://localhost:3000';
+	const APP_URL_PRODUCTION = 'https://app.surefeedback.com';
+
+	/**
+	 * Default mode
+	 */
+	const DEFAULT_MODE = self::MODE_DEVELOPMENT;
+
+	/**
+	 * Make sure to whitelist our option names
+	 *
+	 * @var array
+	 */
+	protected $whitelist_option_names = array();
+
+	/**
+	 * Get instance of this class
+	 *
+	 * @return SureFeedback
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Initialize the plugin
+	 */
+	public function __construct() {
+		$this->setup_properties();
+		$this->define_constants();
+		$this->init_hooks();
+		
+		// Initialize components after WordPress is loaded
+		add_action('init', array($this, 'includes'), 0);
+	}
+
+	/**
+	 * Setup plugin properties
+	 */
+	private function setup_properties() {
+		$this->plugin_path = SUREFEEDBACK_PLUGIN_DIR;
+		$this->plugin_url  = SUREFEEDBACK_PLUGIN_URL;
+	}
+
+	/**
+	 * Define plugin constants
+	 */
+	private function define_constants() {
+		// Environment already defined in global constants
+	}
+
+	/**
+	 * Include required files and initialize components
+	 */
+	public function includes() {
+		// Initialize admin menu
+		if ( is_admin() ) {
+			$this->admin_menu = new \SureFeedback\Admin\Admin_Menu();
 		}
 
-		/**
-		 * Get things going
-		 */
-		public function __construct() {
-			if ( defined( 'PH_VERSION' ) ) {
-				add_action( 'admin_notices', array( $this, 'parent_plugin_activated_error_notice' ) );
-				return;
-			}
+		// Initialize REST controller
+		$this->rest_controller = new \SureFeedback\API\Rest_Controller();
 
-			$this->whitelist_option_names = array(
-				'surefeedback_id'           => array(
-					'description'       => __( 'Website project ID.', 'surefeedback' ),
-					'sanitize_callback' => 'intval',
-				),
-				'surefeedback_api_key'      => array(
-					'description'       => __( 'Public API key for the script loader.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_access_token' => array(
-					'description'       => __( 'Access token to verify access to be able to register and leave comments.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_parent_url'   => array(
-					'description'       => __( 'Parent Site URL.', 'surefeedback' ),
-					'sanitize_callback' => 'esc_url',
-				),
-				'surefeedback_signature'    => array(
-					'description'       => __( 'Secret signature to verify identity.', 'surefeedback' ),
-					'sanitize_callback' => 'sanitize_text_field',
-				),
-				'surefeedback_installed'    => array(
-					'description'       => __( 'Is the plugin installed?', 'surefeedback' ),
-					'sanitize_callback' => 'boolval',
-				),
-			);
+		// Initialize SaaS client
+		$this->saas_client = new \SureFeedback\SaaS\SaaS_Client();
 
-			// options and menu.
-			add_action( 'admin_init', array( $this, 'options' ) );
-			add_action( 'admin_init', array( $this, 'handle_test_status' ) );
-			add_action( 'admin_menu', array( $this, 'create_menu' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_menu_styles' ) );
-
-			// add_action( 'admin_notices', [ $this, 'hide_admin_notices' ], 1 );
-            // add_action( 'all_admin_notices', [ $this, 'hide_admin_notices' ], 1 );
-
-			// custom inline script and styles.
-			add_action( 'admin_init', array( $this, 'ph_custom_inline_script' ) );
-
-			add_action( 'wp_footer', array( $this, 'ph_user_data' ) );
-
-			// show script on front end and maybe admin.
-			// if ( ! is_admin() ) {
-			// 	add_action( 'wp_footer', array( $this, 'script' ) );
-			// }
-			// if ( get_option( 'surefeedback_admin', false ) ) {
-			// 	add_action( 'admin_footer', array( $this, 'script' ) );
-			// }
-
-			// whitelist our blog options.
-			add_filter( 'xmlrpc_blog_options', array( $this, 'whitelist_option' ) );
-
-			// maybe disconnect from parent site.
-			add_action( 'admin_init', array( $this, 'maybe_disconnect' ) );
-
-			// handle connection callback from SureFeedback (original method)
-			// add_action( 'admin_init', array( $this, 'handle_connection_callback' ) );
-
-			// handle webhook from SureFeedback backend
-			add_action( 'rest_api_init', array( $this, 'register_webhook_endpoint' ) );
-
-			// inject widget script on frontend for connected sites
-			add_action( 'wp_footer', array( $this, 'inject_widget_script' ) );
-			
-			// handle automatic verification
-			add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
-			add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
-
-			// remove disconnect args after successful disconnect.
-			add_filter( 'removable_query_args', array( $this, 'remove_disconnect_args' ) );
-
-			// AJAX handlers for plugin management
-			add_action( 'wp_ajax_hfe_recommended_plugin_install', array( $this, 'ajax_install_plugin' ) );
-			add_action( 'wp_ajax_hfe_recommended_plugin_activate', array( $this, 'ajax_activate_plugin' ) );
-			add_action( 'wp_ajax_get_plugin_status', array( $this, 'ajax_get_plugin_status' ) );
-
-			// update registration option in database for parent site reference.
-			register_activation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'register_installation' ) );
-			register_deactivation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'deregister_installation' ) );
-
-			// redirect to the options page after activating.
-			add_action( 'activated_plugin', array( $this, 'redirect_options_page' ) );
-
-			// Add settings link to plugins page.
-			add_filter( 'plugin_action_links_' . plugin_basename( SUREFEEDBACK_PLUGIN_FILE ), array( $this, 'add_settings_link' ) );
-
-			// white label text only on plugins page.
-			global $pagenow;
-			if ( is_admin() && 'plugins.php' === $pagenow ) {
-				add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
-				add_filter( 'plugin_row_meta', array( $this, 'white_label_link' ), 10, 4 );
-			}
-
-			// add_filter( 'ph_script_should_start_loading', array( $this, 'compatiblity_blacklist' ) );
+		// Initialize frontend manager
+		if ( ! is_admin() ) {
+			$this->frontend_manager = new \SureFeedback\Frontend\Frontend_Manager();
 		}
+	}
 
-		/**
-		 * Checks compatibility blacklist.
-		 *
-		 * @param string $load Specifies if script should start loading.
-		 *
-		 * @return bool|string
-		 */
-		public function compatiblity_blacklist( $load ) {
-			$disabled = apply_filters(
-				'ph_disable_for_query_vars',
-				array(
-					// divi.
-					'et_fb',
-					// elementor.
-					'elementor-preview',
-					// beaver builder.
-					'fl_builder',
-					'fl_builder_preview',
-					// fusion.
-					'builder',
-					'fb-edit',
-				)
-			);
+	/**
+	 * Initialize hooks
+	 */
+	private function init_hooks() {
+		// Load plugin text domain and setup options after WordPress is ready
+		add_action( 'init', array( $this, 'load_textdomain' ) );
 
-			// disable these.
-			if ( ! empty( $_GET ) && is_array( $_GET ) ) {
-				foreach ( $_GET as $arg => $_ ) {
-					if ( in_array( $arg, $disabled ) ) {
-						return false;
-					}
-				}
-			}
+		// Handle automatic verification using SaaS client
+		add_action( 'surefeedback_auto_verify', array( $this, 'perform_auto_verification' ) );
+		add_action( 'surefeedback_hourly_verify', array( $this, 'perform_hourly_verification_update' ) );
 
-			// oxygen is... "special".
-			if ( isset( $_GET['ct_builder'] ) ) {
-				return false; // TODO: remove once we can get pageX, pageY inside iframe.
-				// bail if admin commenting is disabled.
-				if ( ! get_option( 'surefeedback_admin', false ) ) {
-					return false;
-				}
-				// bail if not in the iframe.
-				if ( ! isset( $_GET['oxygen_iframe'] ) ) {
-					return false;
-				}
-			}
+		// Update registration option in database for parent site reference
+		register_activation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'register_installation' ) );
+		register_deactivation_hook( SUREFEEDBACK_PLUGIN_FILE, array( $this, 'deregister_installation' ) );
 
-			return $load;
+		// Redirect to the options page after activating
+		add_action( 'activated_plugin', array( $this, 'redirect_options_page' ) );
+
+		// Add settings link to plugins page
+		add_filter( 'plugin_action_links_' . plugin_basename( SUREFEEDBACK_PLUGIN_FILE ), array( $this, 'add_settings_link' ) );
+
+		// White label text only on plugins page
+		global $pagenow;
+		if ( is_admin() && 'plugins.php' === $pagenow ) {
+			add_filter( 'gettext', array( $this, 'white_label' ), 20, 3 );
 		}
+	}
+
+	/**
+	 * Load plugin text domain
+	 */
+	public function load_textdomain() {
+		load_plugin_textdomain('surefeedback', false, dirname(plugin_basename(__FILE__)) . '/languages');
+	}
 
 		/**
-		 * Show parent plugin activation notice.
-		 *
-		 * @return void
-		 */
-		public function parent_plugin_activated_error_notice() {
-			$message = __( 'You have both the client site and SureFeedback core plugins activated. You must only activate the client site on a client site, and SureFeedback on your main site.', 'surefeedback' );
-			echo '<div class="error"> <p>' . esc_html( $message ) . '</p></div>';
-		}
-
-		/**
-		 * Show white label link.
-		 *
-		 * @param string $plugin_meta Specifies Plugin meta data.
-		 * @param string $plugin_file Specifies Plugin file.
-		 * @param string $plugin_data Specifies Plugin data.
-		 * @param string $status Specifies Plugin status.
+		 * Get current environment mode
 		 *
 		 * @return string
 		 */
-		public function white_label_link( $plugin_meta, $plugin_file, $plugin_data, $status ) {
-			global $pagenow;
-			if ( ! is_admin() || 'plugins.php' !== $pagenow ) {
-				return $plugin_meta;
-			}
-			if ( ! isset( $plugin_data['slug'] ) ) {
-				return $plugin_meta;
-			}
-			if ( 'projecthuddle-child-site' === $plugin_data['slug'] ) {
-				$link       = get_option( 'surefeedback_plugin_link', '' );
-				$author     = get_option( 'surefeedback_plugin_author', '' );
-				$author_url = get_option( 'surefeedback_plugin_author_url', '' );
-				if ( $link ) {
-					$plugin_meta[2] = '<a href="' . esc_url( $link ) . '" target="_blank">' . esc_html__( 'Visit plugin site', 'surefeedback' ) . '</a>';
-				}
+		public function get_environment_mode() {
+			return defined( 'SUREFEEDBACK_MODE' ) ? SUREFEEDBACK_MODE : self::DEFAULT_MODE;
+		}
 
-				if ( $author && $author_url ) {
-					$plugin_meta[1] = '<a href="' . esc_url( $author_url ) . '" target="_blank">' . esc_html( $author ) . '</a>';
-				}
-			}
-			return $plugin_meta;
+		/**
+		 * Get API URL based on environment
+		 *
+		 * @return string
+		 */
+		public function get_api_url() {
+			return $this->get_environment_mode() === self::MODE_PRODUCTION 
+				? self::API_URL_PRODUCTION 
+				: self::API_URL_LOCAL;
+		}
+
+		/**
+		 * Get App URL based on environment
+		 *
+		 * @return string
+		 */
+		public function get_app_url() {
+			return $this->get_environment_mode() === self::MODE_PRODUCTION 
+				? self::APP_URL_PRODUCTION 
+				: self::APP_URL_LOCAL;
 		}
 
 		/**
@@ -296,13 +284,13 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			// make the changes to the text.
 			if ( 'surefeedback' === $domain ) { // added this check to avoid conflicting other plugins.
 				switch ( $untranslated_text ) {
-					case 'SureFeedback Client Site':
+					case 'SureFeedback Client':
 						$name = get_option( 'surefeedback_plugin_name', false );
 						if ( $name ) {
 							$translated_text = $name;
 						}
 						break;
-					case 'Collect note-style feedback from your client’s websites and sync them with your SureFeedback parent project.':
+					case 'Collect note-style feedback from your client\'s websites and sync them with your SureFeedback parent project.';
 						$description = get_option( 'surefeedback_plugin_description', false );
 						if ( $description ) {
 							$translated_text = $description;
@@ -314,10 +302,22 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 							$translated_text = $author;
 						}
 						break;
+					case 'https://www.brainstormforce.com':
+						$author_url = get_option( 'surefeedback_plugin_author_url', false );
+						if ( $author_url ) {
+							$translated_text = $author_url;
+						}
+						break;
+					case 'http://surefeedback.com':
+						$plugin_link = get_option( 'surefeedback_plugin_link', false );
+						if ( $plugin_link ) {
+							$translated_text = $plugin_link;
+						}
+						break;
 					// add more items.
+					
 				}
 			}
-
 			return $translated_text;
 		}
 
@@ -336,40 +336,7 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			return $links;
 		}
 
-		/**
-		 * Make sure these are automatically removed after save
-		 *
-		 * @param array $args Passes disconnect args.
-		 *
-		 * @return array
-		 */
-		public function remove_disconnect_args( $args ) {
-			array_push( $args, 'surefeedback-site-disconnect-nonce' );
-			array_push( $args, 'surefeedback-site-disconnect' );
-			return $args;
-		}
-
-		/**
-		 * Maybe disconnect from parent site
-		 *
-		 * @return void
-		 */
-		public function maybe_disconnect() {
-			if ( ! isset( $_GET['surefeedback-site-disconnect'] ) ) {
-				return;
-			}
-
-			// nonce check.
-			if ( ! isset( $_GET['surefeedback-site-disconnect-nonce'] ) || ! wp_verify_nonce( $_GET['surefeedback-site-disconnect-nonce'], 'surefeedback-site-disconnect-nonce' ) ) {
-				wp_die( 'That\'s not allowed' );
-			}
-
-			foreach ( $this->whitelist_option_names as $name => $items ) {
-				delete_option( $name );
-			}
-
-			wp_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) );
-		}
+	
 
 		/**
 		 * Redirect to options page.
@@ -379,8 +346,12 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 		 * @return void
 		 */
 		public function redirect_options_page( $plugin ) {
-			if ( plugin_basename( __FILE__ ) == $plugin ) {
-				exit( wp_redirect( admin_url( 'admin.php?page=surefeedback#dashboard' ) ) );
+			$connection = get_option( 'surefeedback_connection_status', false );
+			if ( plugin_basename( __FILE__ ) == $plugin && ($connection !== 'connected')) {
+				exit( wp_redirect( admin_url( 'admin.php?page=surefeedback#setup-wizard' ) ) );
+			}
+			else{
+				exit( wp_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) ) );
 			}
 		}
 
@@ -402,1856 +373,68 @@ if ( ! class_exists( 'SureFeedback' ) ) :
 			delete_option( 'surefeedback_installed' );
 		}
 
-		/**
-		 * Whitelist our option in xmlrpc
-		 *
-		 * @param array $options whitelabel options.
-		 *
-		 * @return array
-		 */
-		public function whitelist_option( $options ) {
-			foreach ( $this->whitelist_option_names as $name => $item ) {
-				$options[ $name ] = array(
-					'desc'     => esc_html( $item['description'] ),
-					'readonly' => false,
-					'option'   => $name,
-				);
-			}
 
-			return $options;
-		}
-
-		/**
-		 * Create Menu
-		 *
-		 * @return void
-		 */
-		public function create_menu() {
-			$plugin_name = get_option( 'surefeedback_plugin_name', false );
-			$menu_title = $plugin_name ? esc_html( $plugin_name ) : __( 'SureFeedback', 'surefeedback' );
-			
-			// Add main menu page
-			add_menu_page(
-				__( 'SureFeedback', 'surefeedback' ), // Page title
-				$menu_title, // Menu title
-				'manage_options', // Capability
-				'surefeedback', // Menu slug
-				array( $this, 'main_page' ), // Function
-				$this->get_menu_icon(), // Icon
-				58 // Position (after Settings)
-			);
-			
-			// Add dashboard submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Dashboard', 'surefeedback' ), // Page title
-				__( 'Dashboard', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-			
-			// Add settings submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Settings', 'surefeedback' ), // Page title
-				__( 'Settings', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback#settings', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-
-			// Add settings submenu
-			add_submenu_page(
-				'surefeedback', // Parent slug
-				__( 'Connection', 'surefeedback' ), // Page title
-				__( 'Connection', 'surefeedback' ), // Menu title
-				'manage_options', // Capability
-				'surefeedback#connection', // Menu slug
-				array( $this, 'main_page' ) // Function
-			);
-			
-			// Keep the old settings page for backward compatibility
-			add_options_page(
-				__( 'Feedback Connection', 'surefeedback' ),
-				$menu_title,
-				'manage_options',
-				'feedback-connection-options',
-				array( $this, 'options_page' )
-			);
-		}
-
-		/**
-		 * Get menu icon for SureFeedback
-		 *
-		 * @return string
-		 */
-		private function get_menu_icon() {
-			// Use the project huddle icon
-			$icon_file = SUREFEEDBACK_PLUGIN_DIR . '';
-			
-			if ( file_exists( $icon_file ) ) {
-				return SUREFEEDBACK_PLUGIN_URL . '';
-			}
-			
-			// Fallback to dashicons if icon file doesn't exist
-			return 'dashicons-format-chat';
-		}
-
-		/**
-		 * Main page content (handles both dashboard and settings)
-		 *
-		 * @return void
-		 */
-		public function main_page() {
-			// Enqueue admin scripts and styles
-			$this->enqueue_admin_scripts_dashboard();
-			?>
-			<div class="wrap">
-				<div id="surefeedback-dashboard-app"></div>
-			</div>
-			<?php
-		}
-
-		/**
-		 * Dashboard page content (deprecated - kept for backward compatibility)
-		 *
-		 * @return void
-		 */
-		public function dashboard_page() {
-			$this->main_page();
-		}
-
-
-		/**
-		 * Enqueue admin scripts and styles for dashboard
-		 *
-		 * @return void
-		 */
-		public function enqueue_admin_scripts_dashboard() {
-			$screen = get_current_screen();
-			
-			// Only load on our dashboard page
-			if ( $screen->id !== 'toplevel_page_surefeedback' ) {
-				return;
-			}
-			
-			// Check if built React dashboard assets exist
-			$js_file = SUREFEEDBACK_PLUGIN_DIR . 'assets/dist/admin.js';
-			$css_file = SUREFEEDBACK_PLUGIN_DIR . 'assets/dist/admin.css';
-
-			if ( file_exists( $js_file ) ) {
-				wp_enqueue_script(
-					'surefeedback-dashboard',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/dist/admin.js',
-					array(),
-					filemtime( $js_file ),
-					true
-				);
-				
-				// Add module type for ES6 imports
-				add_filter( 'script_loader_tag', array( $this, 'add_module_type_to_dashboard_script' ), 10, 3 );
-
-				// Localize script with WordPress data
-				wp_localize_script(
-					'surefeedback-dashboard',
-					'sureFeedbackAdmin',
-					array(
-						'rest_url'         => rest_url(),
-						'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
-						'admin_url'        => admin_url(),
-						'ajax_url'         => admin_url( 'admin-ajax.php' ),
-						'plugin_url'       => SUREFEEDBACK_PLUGIN_URL,
-						'nonce'            => wp_create_nonce( 'surefeedback_admin_nonce' ),
-						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
-						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
-						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
-						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
-						'connection_status' => get_option( 'surefeedback_connection_status', 'not_connected' ),
-						// Site token data for disconnect functionality
-						'site_token'       => get_option( 'surefeedback_site_token', '' ) ?: get_option( 'surefeedback_api_key', '' ),
-						'api_token'        => get_option( 'surefeedback_api_key', '' ),
-						'site_domain'      => parse_url( home_url(), PHP_URL_HOST ),
-						'api_url'          => 'http://localhost:8000/api/v1',
-						'user_token'       => get_option( 'surefeedback_user_token', '' ),
-						// Connection data for auth.js
-						'connection' => array(
-							'app_url'          => 'http://localhost:3000',
-							'callback_url'     => admin_url('admin.php?page=surefeedback&action=callback'),
-							'site_data' => array(
-								'domain'           => parse_url(home_url(), PHP_URL_HOST),
-								'site_name'        => get_bloginfo('name'),
-								'site_url'         => home_url(),
-								'admin_email'      => get_option('admin_email'),
-								'wp_version'       => get_bloginfo('version'),
-								'plugin_version'   => defined('SUREFEEDBACK_VERSION') ? SUREFEEDBACK_VERSION : '1.0.0',
-								'language'         => get_locale(),
-								'timezone'         => get_option('timezone_string') ?: 'UTC',
-								'theme'            => get_template(),
-								'active_plugins'   => count(get_option('active_plugins', [])),
-							)
-						),
-						'icon_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/project-huddle-icon.png',
-						'welcome_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/Video player.png',
-						'settings_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/settings_unselected.svg',
-						'settings_selected_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/settings.svg',
-						'label_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/label.svg',
-						'label_selected_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/label_selected.svg',
-						'connection_url'             => SUREFEEDBACK_PLUGIN_URL . 'assets/connection.svg',
-						'surerank_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surerank.svg',
-						'surecart_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surecart.svg',
-						'sureforms_icon'   => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/sureforms.svg',
-						'presto_player_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/pplayer.svg',
-						'surefeedback_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surefeedback.svg',
-						'thumbs' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/thumbs.svg',
-						'rocket' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/rocket.svg',
-						'admin' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/admin.svg',
-						'docs' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/docs.svg',
-						'welcome' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome.png',
-						'configure' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/configure_banner.png',
-						'footer' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/footer.png',
-						'welcome_background' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/welcome_background.png',
-						'suretriggers_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/OttoKit-Symbol-Primary.svg',
-					)
-				);
-			}
-
-			if ( file_exists( $css_file ) ) {
-				wp_enqueue_style(
-					'surefeedback-dashboard',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/dist/admin.css',
-					array(),
-					filemtime( $css_file )
-				);
-			}
-			
-			// Enqueue admin dashboard custom styles
-			$dashboard_css = SUREFEEDBACK_PLUGIN_DIR . 'assets/admin-dashboard.css';
-			if ( file_exists( $dashboard_css ) ) {
-				wp_enqueue_style(
-					'surefeedback-dashboard-custom',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-dashboard.css',
-					array(),
-					filemtime( $dashboard_css )
-				);
-			}
-			
-			// Enqueue WordPress admin styles
-			wp_enqueue_style( 'common' );
-			wp_enqueue_style( 'forms' );
-			wp_enqueue_style( 'dashicons' );
-		}
-
-		/**
-		 * Enqueue admin menu styles globally
-		 *
-		 * @return void
-		 */
-		public function enqueue_admin_menu_styles() {
-			// Enqueue menu icon styles on all admin pages
-			$menu_css = SUREFEEDBACK_PLUGIN_DIR . 'assets/admin-menu.css';
-			if ( file_exists( $menu_css ) ) {
-				wp_enqueue_style(
-					'surefeedback-menu-styles',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-menu.css',
-					array(),
-					filemtime( $menu_css )
-				);
-			}
-			
-			// Enqueue admin dashboard styles on all admin pages
-			$dashboard_css = SUREFEEDBACK_PLUGIN_DIR . 'assets/admin-dashboard.css';
-			if ( file_exists( $dashboard_css ) ) {
-				wp_enqueue_style(
-					'surefeedback-dashboard-styles',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/admin-dashboard.css',
-					array(),
-					filemtime( $dashboard_css )
-				);
-			}
-		}
-
-		/**
-		 * Add module type to dashboard script tag
-		 *
-		 * @param string $tag    The script tag.
-		 * @param string $handle The script handle.
-		 * @param string $src    The script source.
-		 * @return string
-		 */
-		public function add_module_type_to_dashboard_script( $tag, $handle, $src ) {
-			if ( 'surefeedback-dashboard' === $handle ) {
-				$tag = str_replace( '<script ', '<script type="module" ', $tag );
-			}
-			return $tag;
-		}
-
-		/**
-         * Hide admin notices on the custom settings page.
-         *
-         * @since 2.2.1
-         * @return void
-         */
-        public static function hide_admin_notices() {
-            $screen                = get_current_screen();
-            $pages_to_hide_notices = [
-                'edit-elementor-hf',     // Edit screen for elementor-hf post type.
-                'elementor-hf',          // New post screen for elementor-hf post type.
-            ];
-            if ( in_array( $screen->id, $pages_to_hide_notices ) || 'toplevel_page_surefeedback' === $screen->id ) {
-                remove_all_actions( 'admin_notices' );
-                remove_all_actions( 'all_admin_notices' );
-            }
-        }
-
-		/**
-		 * Add module type to admin script tag
-		 *
-		 * @param string $tag    The script tag.
-		 * @param string $handle The script handle.
-		 * @param string $src    The script source.
-		 * @return string
-		 */
-		public function add_module_type_to_admin_script( $tag, $handle, $src ) {
-			if ( 'surefeedback-admin' === $handle ) {
-				$tag = str_replace( '<script ', '<script type="module" ', $tag );
-			}
-			return $tag;
-		}
-
-		/**
-		 * Handle test status changes via URL parameters
-		 * 
-		 * @return void
-		 */
-		public function handle_test_status() {
-			// Only allow in admin and if user has manage_options capability
-			if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
-				return;
-			}
-
-			// Test connection status
-			if ( isset( $_GET['test_connection'] ) ) {
-				$status = sanitize_text_field( $_GET['test_connection'] );
-				if ( in_array( $status, array( 'connected', 'not_connected' ) ) ) {
-					update_option( 'surefeedback_connection_status', $status );
-				}
-			}
-
-			// Test verification status  
-			if ( isset( $_GET['test_verification'] ) ) {
-				$status = sanitize_text_field( $_GET['test_verification'] );
-				if ( in_array( $status, array( 'verified', 'pending', 'failed', 'unverified' ) ) ) {
-					update_option( 'surefeedback_verification_status', $status );
-				}
-			}
-		}
-
-		/**
-		 * Add settings section from dashboard.
-		 *
-		 * @return void
-		 */
-		public function options() {
-			add_settings_section(
-				'ph_general_section', // ID.
-				__( 'General Settings', 'surefeedback' ), // title.
-				'__return_false', // description.
-				'surefeedback_general_options' // Page on which to add this section of options.
-			);
-
-			add_settings_field(
-				'surefeedback_enabled_comment_roles',
-				__( 'Comments Visibility Access', 'surefeedback' ),
-				array( $this, 'commenters_checklist' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_general_options', // The page on which this option will be displayed.
-				'ph_general_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			// Finally, we register the fields with WordPress.
-			register_setting(
-				'surefeedback_general_options',
-				'surefeedback_enabled_comment_roles',
-				'surefeedback_help_link'
-			);
-
-			add_settings_field(
-				'surefeedback_allow_guests',
-				__( 'Allow Site Visitors', 'surefeedback' ),
-				array( $this, 'allow_guests' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_general_options', // The page on which this option will be displayed.
-				'ph_general_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			// register setting.
-			register_setting(
-				'surefeedback_general_options',
-				'surefeedback_allow_guests',
-				array(
-					'type' => 'boolean',
-				)
-			);
-
-			add_settings_field(
-				'surefeedback_admin',
-				__( 'Dashboard Commenting', 'surefeedback' ),
-				array( $this, 'allow_admin' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_general_options', // The page on which this option will be displayed.
-				'ph_general_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			// register setting.
-			register_setting(
-				'surefeedback_general_options',
-				'surefeedback_admin',
-				array(
-					'type' => 'boolean',
-				)
-			);
-
-			add_settings_section(
-				'ph_connection_status_section', // ID.
-				__( 'Connection', 'surefeedback' ), // title.
-				'__return_false', // description.
-				'surefeedback_connection_options' // Page on which to add this section of options.
-			);
-
-			add_settings_field(
-				'ph_connection_status',
-				__( 'Connection Status', 'surefeedback' ),
-				array( $this, 'connection_status' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_connection_options', // The page on which this option will be displayed.
-				'ph_connection_status_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_help_link',
-				'',
-				array( $this, 'help_link' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_connection_options', // The page on which this option will be displayed.
-				'ph_connection_status_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_manual_connection',
-				__( 'Manual Connection Details', 'surefeedback' ),
-				array( $this, 'manual_connection' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_connection_options', // The page on which this option will be displayed.
-				'ph_connection_status_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			// register setting.
-			register_setting(
-				'surefeedback_connection_options',
-				'surefeedback_manual_connection',
-				array(
-					'type'              => 'string',
-					'sanitize_callback' => array( $this, 'manual_import' ),
-				)
-			);
-
-			add_settings_section(
-				'surefeedback_white_label_section', // ID.
-				__( 'White Label', 'surefeedback' ), // title.
-				'__return_false', // description.
-				'surefeedback_white_label_options' // Page on which to add this section of options.
-			);
-
-			add_settings_field(
-				'surefeedback_plugin_name',
-				__( 'Plugin Name', 'surefeedback' ),
-				array( $this, 'plugin_name' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_white_label_options', // The page on which this option will be displayed.
-				'surefeedback_white_label_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_plugin_description',
-				__( 'Plugin Description', 'surefeedback' ),
-				array( $this, 'plugin_description' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_white_label_options', // The page on which this option will be displayed.
-				'surefeedback_white_label_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_plugin_author',
-				__( 'Plugin Author', 'surefeedback' ),
-				array( $this, 'plugin_author' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_white_label_options', // The page on which this option will be displayed.
-				'surefeedback_white_label_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_plugin_author_url',
-				__( 'Plugin Author URL', 'surefeedback' ),
-				array( $this, 'plugin_author_url' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_white_label_options', // The page on which this option will be displayed.
-				'surefeedback_white_label_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			add_settings_field(
-				'surefeedback_plugin_link',
-				__( 'Plugin Link', 'surefeedback' ),
-				array( $this, 'plugin_link' ), // The name of the function responsible for rendering the option interface.
-				'surefeedback_white_label_options', // The page on which this option will be displayed.
-				'surefeedback_white_label_section', // The name of the section to which this field belongs.
-				false
-			);
-
-			// register setting.
-			register_setting(
-				'surefeedback_white_label_options',
-				'surefeedback_plugin_name',
-				array(
-					'type' => 'string',
-				)
-			);
-			// register setting.
-			register_setting(
-				'surefeedback_white_label_options',
-				'surefeedback_plugin_description',
-				array(
-					'type' => 'string',
-				)
-			);
-			// register setting.
-			register_setting(
-				'surefeedback_white_label_options',
-				'surefeedback_plugin_author',
-				array(
-					'type' => 'string',
-				)
-			);
-
-			register_setting(
-				'surefeedback_white_label_options',
-				'surefeedback_plugin_author_url',
-				array(
-					'type' => 'string',
-				)
-			);
-
-			// register setting.
-			register_setting(
-				'surefeedback_white_label_options',
-				'surefeedback_plugin_link',
-				array(
-					'type' => 'string',
-				)
-			);
-		}
-
-		/**
-		 * Return Plugin Name.
-		 *
-		 * @return void
-		 */
-		public function plugin_name() {
-			?>
-				<input type="text" name="surefeedback_plugin_name" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_name', '' ) ) ); ?>" />
-				<?php
-		}
-
-		/**
-		 * Return Plugin description.
-		 *
-		 * @return void
-		 */
-		public function plugin_description() {
-			?>
-				<textarea name="surefeedback_plugin_description" rows="3" class="regular-text"><?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_description', '' ) ) ); ?></textarea>
-				<?php
-		}
-
-		/**
-		 * Return Plugin author.
-		 *
-		 * @return void
-		 */
-		public function plugin_author() {
-			?>
-				<input type="text" name="surefeedback_plugin_author" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_author', '' ) ) ); ?>" />
-				<?php
-		}
-
-		/**
-		 * Return Plugin author url.
-		 *
-		 * @return void
-		 */
-		public function plugin_author_url() {
-			?>
-				<input type="text" name="surefeedback_plugin_author_url" class="regular-text" value="<?php echo esc_attr( sanitize_text_field( get_option( 'surefeedback_plugin_author_url', '' ) ) ); ?>" />
-				<?php
-		}
-
-		/**
-		 * Return Plugin link.
-		 *
-		 * @return void
-		 */
-		public function plugin_link() {
-			?>
-				<input type="url" name="surefeedback_plugin_link" class="regular-text" value="<?php echo esc_attr( esc_url( get_option( 'surefeedback_plugin_link', '' ) ) ); ?>" />
-				<?php
-		}
-
-		/**
-		 * Provides manual import functionality.
-		 *
-		 * @param string $val import content.
-		 * @return string
-		 */
-		public function manual_import( $val ) {
-			$settings = json_decode( $val, true );
-
-			// update manual import.
-			if ( ! empty( $settings ) ) {
-				foreach ( $settings as $key => $value ) {
-					if ( array_key_exists( 'surefeedback_' . $key, $this->whitelist_option_names ) ) {
-						$sanitize = $this->whitelist_option_names[ 'surefeedback_' . $key ]['sanitize_callback'];
-						$updated  = update_option( 'surefeedback_' . $key, $sanitize( $value ) );
-					}
-				}
-			}
-
-			return $val;
-		}
-
-		/**
-		 * Check commenters checklist.
-		 *
-		 * @return void
-		 */
-		public function commenters_checklist() {
-			$disable_roles = (array) get_option( 'surefeedback_enabled_comment_roles', array() );
-			$roles         = (array) get_editable_roles();
-
-			if ( ! empty( $roles ) ) {
-				foreach ( $roles as $slug => $role ) {
-					if ( empty( $disable_roles ) ) {
-						$checked = true;
-					} else {
-						$checked = in_array( $slug, $disable_roles );
-					}
-					?>
-						<input type="checkbox" name="surefeedback_enabled_comment_roles[<?php echo esc_attr( $slug ); ?>]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( $checked ); ?>> <?php echo esc_html( $role['name'] ); ?><br>
-						<?php
-				}
-				?>
-				<br><span class="description">
-				<?php
-				esc_html_e( 'Allow above user roles to view comments on your site without access token.', 'surefeedback' );
-				?>
-				</span> 
-				<?php
-			}
-		}
-
-		/**
-		 * Check if guests are allowed to comment.
-		 *
-		 * @return void
-		 */
-		public function allow_guests() {
-			?>
-				<input type="checkbox" name="surefeedback_allow_guests" <?php checked( get_option( 'surefeedback_allow_guests', false ), 'on' ); ?>>
-				<?php esc_html_e( 'Allow the site visitors to view and add comments on your site without access token.', 'surefeedback' ); ?><br>
-				<?php
-		}
-
-		/**
-		 * Check if admin is allowed to comment.
-		 *
-		 * @return void
-		 */
-		public function allow_admin() {
-			?>
-				<input type="checkbox" name="surefeedback_admin" <?php checked( get_option( 'surefeedback_admin', false ), 'on' ); ?>>
-				<?php esc_html_e( 'Allow commenting in your site\'s WordPress dashboard area.', 'surefeedback' ); ?><br>
-				<?php
-		}
-
-		/**
-		 * Fetch connection status.
-		 *
-		 * @return void
-		 */
-		public function connection_status() {
-			?>
-
-				<style>
-					.ph-badge {
-						color: #7d7d7d;
-						background: #e4e4e4;
-						display: inline-block;
-						padding: 5px;
-						line-height: 1;
-						border-radius: 3px;
-					}
-
-					.ph-badge.ph-connected {
-						color: #559a55;
-						background: #daecda;
-					}
-
-					.ph-badge.ph-not-connected {
-						color: #9c8a44;
-						background: #f1ebd3;
-					}
-					a.ph-admin-link {
-						margin-left: 10px !important;
-					}
-					.surefeedback-disable-row {
-						display: none;
-					}
-				</style>
-				<?php
-				$connection              = get_option( 'surefeedback_parent_url', false );
-				$site_id                 = (int) get_option( 'surefeedback_id' );
-				$dashboard_url           = $connection . '/wp-admin/post.php?post=' . $site_id . '&action=edit';
-				$whitelabeld_plugin_name = get_option( 'surefeedback_plugin_name', false );
-				if ( $connection ) {
-					/* translators: %s: parent site URL */
-					echo '<p class="ph-badge ph-connected">' . sprintf( __( 'Connected to %s', 'surefeedback' ), esc_url( $connection ) ) . '</p>';
-					echo '<p class="submit">';
-						echo '<a class="button button-secondary surefeedback-reload" href="' . esc_url(
-							add_query_arg(
-								array(
-									'surefeedback-site-disconnect' => 1,
-									'surefeedback-site-disconnect-nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
-								),
-								remove_query_arg( 'settings-updated' )
-							)
-						) . '">' . esc_html__( 'Disconnect', 'surefeedback' ) . '</a>';
-					if ( ! $whitelabeld_plugin_name ) {
-						echo '<a class="button button-secondary ph-admin-link" target="_blank" href="' . esc_url( $dashboard_url ) . '">' . esc_html__( 'Visit Dashboard Site', 'surefeedback' ) . '</a>';
-					}
-					echo '</p>';
-				} else {
-					echo '<p class="ph-badge ph-not-connected">';
-					esc_html_e( 'Not Connected. Please connect this plugin to your Feedback installation.', 'surefeedback' );
-					echo '</p>';
-					?>
-					<style>
-					.surefeedback-disable-row {
-						display: revert !important;
-					}
-					</style>
-					<?php
-				}
-				?>
-				<?php
-		}
-
-		/**
-		 * Display help link for manual connection.
-		 *
-		 * @return void
-		 */
-		public function help_link() {
-			$whitelabel_name = get_option( 'surefeedback_plugin_name', false );
-			if ( ! $whitelabel_name ) {
-				?>
-				<p class="submit">
-					<a class="surefeedback-help-link" style="text-decoration: none;" target="_blank" href="https://surefeedback.com/docs/adding-a-clients-wordpress-site#manual">
-						<?php esc_html_e( 'Need Help?', 'surefeedback' ); ?>
-					</a> 
-				</p>
-				<?php
-			}
-		}
-
-		/**
-		 * Manual connection content.
-		 *
-		 * @return void
-		 */
-		public function manual_connection() {
-			?>
-				<p class="surefeedback-manual-connection"><?php esc_html_e( 'If you are having trouble connecting, you can manually connect by pasting the connection details below', 'surefeedback' ); ?></p><br>
-				<textarea name="surefeedback_manual_connection" style="width:500px;height:300px"></textarea>
-				<?php
-		}
-
-		/**
-		 * Handle connection callback from SureFeedback app
-		 *
-		 * @return void
-		 */
-		public function handle_connection_callback() {
-			// Only handle on admin pages with our action parameter
-			if ( ! is_admin() || ! isset( $_GET['action'] ) || $_GET['action'] !== 'callback' ) {
-				return;
-			}
-
-			// Check if this is our callback page
-			if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'surefeedback' ) {
-				return;
-			}
-
-			// Verify we have the required parameters
-			if ( ! isset( $_GET['success'], $_GET['state'], $_GET['site_token'], $_GET['site_id'], $_GET['organization_id'] ) ) {
-				return;
-			}
-
-			// Sanitize the parameters
-			$success = sanitize_text_field( wp_unslash( $_GET['success'] ) );
-			$state = sanitize_text_field( wp_unslash( $_GET['state'] ) );
-			$site_token = sanitize_text_field( wp_unslash( $_GET['site_token'] ) );
-			$script_token = isset( $_GET['script_token'] ) ? sanitize_text_field( wp_unslash( $_GET['script_token'] ) ) : '';
-			$site_id = sanitize_text_field( wp_unslash( $_GET['site_id'] ) );
-			$organization_id = sanitize_text_field( wp_unslash( $_GET['organization_id'] ) );
-			$site_name = isset( $_GET['site_name'] ) ? sanitize_text_field( wp_unslash( $_GET['site_name'] ) ) : '';
-			$domain = isset( $_GET['domain'] ) ? sanitize_text_field( wp_unslash( $_GET['domain'] ) ) : '';
-			$integration_script = isset( $_GET['integration_script'] ) ? urldecode( wp_kses_post( wp_unslash( $_GET['integration_script'] ) ) ) : '';
-			$script_instructions = isset( $_GET['script_instructions'] ) ? sanitize_textarea_field( wp_unslash( $_GET['script_instructions'] ) ) : '';
-
-			// Check if connection was successful
-			if ( $success === '1' ) {
-				// Save connection data - now with proper SaaS integration
-				update_option( 'surefeedback_id', $site_id );
-				update_option( 'surefeedback_api_key', $site_token );
-				update_option( 'surefeedback_access_token', $script_token ?: $site_token );
-				update_option( 'surefeedback_script_token', $script_token );
-				update_option( 'surefeedback_parent_url', 'http://localhost:8000' );
-				update_option( 'surefeedback_signature', hash_hmac( 'sha256', get_option( 'admin_email' ), $site_token ) );
-				update_option( 'surefeedback_organization_id', $organization_id );
-				update_option( 'surefeedback_site_name', $site_name );
-				update_option( 'surefeedback_domain', $domain );
-				update_option( 'surefeedback_integration_script', $integration_script );
-				update_option( 'surefeedback_script_instructions', $script_instructions );
-				update_option( 'surefeedback_connected_at', current_time( 'mysql' ) );
-				update_option( 'surefeedback_installed', true );
-				update_option( 'surefeedback_state_token', '' ); // Clear state token
-
-				// Auto-verify script integration after connection
-				$this->auto_verify_script();
-				// $this->perform_auto_verification();
-
-				// Set success message
-				add_action( 'admin_notices', array( $this, 'connection_success_notice' ) );
-				
-				// Remove callback parameters from URL to clean it up
-				wp_safe_redirect( admin_url( 'admin.php?page=surefeedback#connection' ) );
-				exit;
-			} else {
-				// Handle connection failure
-				add_action( 'admin_notices', array( $this, 'connection_error_notice' ) );
-			}
-		}
-
-		/**
-		 * Display connection success notice
-		 *
-		 * @return void
-		 */
-		public function connection_success_notice() {
-			$verification_status = get_option( 'surefeedback_verification_status' );
-			$magic_link = get_option( 'surefeedback_magic_link' );
-			$verification_data = get_option( 'surefeedback_verification_data' );
-			$site_name = get_option( 'surefeedback_site_name' );
-			
-			?>
-			<div class="notice notice-success is-dismissible">
-				<p><?php esc_html_e( 'Successfully connected to SureFeedback! Your site is now ready to collect feedback.', 'surefeedback' ); ?></p>
-				
-				<?php if ( $verification_status === 'verified' && $magic_link ) : ?>
-					<!-- Same success display as SaaS dashboard VerificationStep.tsx -->
-					<div style="padding: 10px; border-left: 4px solid #46d369; background-color: #f0fdf4;">
-						<p style="margin: 0; color: #15803d;">
-							<strong>✅ <?php esc_html_e( 'Integration Verified Successfully!', 'surefeedback' ); ?></strong>
-						</p>
-						<?php if ( $verification_data ) : 
-							$verification = json_decode( $verification_data, true );
-							if ( $verification ) : ?>
-								<p style="margin: 5px 0 10px 0; font-size: 12px; color: #15803d;">
-									<?php printf( 
-										esc_html__( 'Last verified: %s | Domain: %s', 'surefeedback' ),
-										isset( $verification['last_seen'] ) ? esc_html( $verification['last_seen'] ) : esc_html__( 'just now', 'surefeedback' ),
-										isset( $verification['client_domain'] ) ? esc_html( $verification['client_domain'] ) : esc_html( get_site_url() )
-									); ?>
-								</p>
-							<?php endif; ?>
-						<?php endif; ?>
-						
-						<a href="<?php echo esc_url( $magic_link ); ?>" target="_blank" class="button button-primary" style="margin-top: 5px;">
-							🔗 <?php esc_html_e( 'Open SureFeedback Dashboard', 'surefeedback' ); ?>
-						</a>
-					</div>
-					
-				<?php elseif ( $verification_status === 'failed' ) : ?>
-					<!-- Same error display as SaaS dashboard VerificationStep.tsx -->
-					<div style="padding: 10px; border-left: 4px solid #ef4444; background-color: #fef2f2;">
-						<p style="margin: 0; color: #dc2626;">
-							<strong>❌ <?php esc_html_e( 'Integration verification failed', 'surefeedback' ); ?></strong>
-						</p>
-						<p style="margin: 5px 0 0 0; font-size: 12px; color: #dc2626;">
-							<?php esc_html_e( 'The widget script may not be loading correctly on your website. Please check your site and try again.', 'surefeedback' ); ?>
-						</p>
-					</div>
-					
-				<?php elseif ( $verification_status === 'pending' ) : ?>
-					<!-- Same checking display as SaaS dashboard VerificationStep.tsx -->
-					<div style="padding: 10px; border-left: 4px solid #3b82f6; background-color: #eff6ff;">
-						<p style="margin: 0; color: #1d4ed8;">
-							<strong>🔄 <?php esc_html_e( 'Verifying integration...', 'surefeedback' ); ?></strong>
-						</p>
-						<p style="margin: 5px 0 0 0; font-size: 12px; color: #1d4ed8;">
-							<?php esc_html_e( 'Please wait while we verify that the widget is loading correctly on your website.', 'surefeedback' ); ?>
-						</p>
-						<script>
-						// Auto-refresh page after 45 seconds to show verification results (same as SaaS dashboard)
-						setTimeout(function() {
-							window.location.reload();
-						}, 45000);
-						</script>
-					</div>
-					
-				<?php else : ?>
-					<!-- Initial verification state -->
-					<div style="padding: 10px; border-left: 4px solid #f59e0b; background-color: #fffbeb;">
-						<p style="margin: 0; color: #92400e;">
-							<strong>⏳ <?php esc_html_e( 'Starting verification...', 'surefeedback' ); ?></strong>
-						</p>
-						<p style="margin: 5px 0 0 0; font-size: 12px; color: #92400e;">
-							<?php esc_html_e( 'Integration verification will begin shortly. This page will refresh automatically with results.', 'surefeedback' ); ?>
-						</p>
-						<script>
-						// Auto-refresh page after 35 seconds to check verification results
-						setTimeout(function() {
-							window.location.reload();
-						}, 35000);
-						</script>
-					</div>
-				<?php endif; ?>
-			</div>
-			<?php
-		}
-
-		/**
-		 * Display connection error notice
-		 *
-		 * @return void
-		 */
-		public function connection_error_notice() {
-			?>
-			<div class="notice notice-error is-dismissible">
-				<p><?php esc_html_e( 'Connection to SureFeedback failed. Please try again.', 'surefeedback' ); ?></p>
-			</div>
-			<?php
-		}
-
-		/**
-		 * Inject SureFeedback widget script on frontend for connected sites
-		 *
-		 * @return void
-		 */
-		public function inject_widget_script() {
-			// Only inject on frontend, not in admin
-			if ( is_admin() ) {
-				return;
-			}
-
-			// Check if site is connected and has proper tokens
-			$site_id = get_option( 'surefeedback_id' );
-			$script_token = get_option( 'surefeedback_script_token' );
-			$access_token = get_option( 'surefeedback_access_token' );
-			$parent_url = get_option( 'surefeedback_parent_url' );
-			$integration_script = get_option( 'surefeedback_integration_script' );
-
-			// Debug: Add console logging to help troubleshoot
-			?>
-			<script>
-			console.log('SureFeedback Debug: Connection check', {
-				site_id: '<?php echo esc_js( $site_id ); ?>',
-				script_token: '<?php echo esc_js( $script_token ? 'present' : 'missing' ); ?>',
-				access_token: '<?php echo esc_js( $access_token ? 'present' : 'missing' ); ?>',
-				parent_url: '<?php echo esc_js( $parent_url ); ?>',
-				integration_script: '<?php echo esc_js( $integration_script ? 'present' : 'missing' ); ?>'
-			});
-			</script>
-			<?php
-
-			if ( ! $site_id || ! $parent_url ) {
-				?>
-				<script>
-				console.warn('SureFeedback: Widget not loaded - missing connection data');
-				</script>
-				<?php
-				return;
-			}
-
-			// Prefer integration script from SaaS platform if available
-			// if ( ! empty( $integration_script ) ) {
-			// 	// Decode the script properly and output as raw HTML (trusted source - our own SaaS platform)
-			// 	$decoded_script = urldecode( $integration_script );
-				
-			// 	// Debug logging to check what we're outputting
-			 	?>
-			
-				<?php
-				
-			// 	// Since this is trusted content from our own SaaS platform, output it directly
-			// 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			// 	echo $decoded_script;
-			// 	return;
-			// }
-
-			// Fallback to manual script injection if no integration script
-			$token = $script_token ?: $access_token;
-			if ( ! $token ) {
-				?>
-				<script>
-				console.warn('SureFeedback: No valid tokens available');
-				</script>
-				<?php
-				return;
-			}
-
-			// Check blacklist (don't show on page builders, etc.)
-			// if ( $this->compatiblity_blacklist() ) {
-			// 	return;
-			// }
-
-			// Inject the SureFeedback widget script - corrected path and configuration
-			?>
-			<!-- SureFeedback Widget -->
-			<script>
-			// SureFeedback WordPress Integration Script (Fallback Mode)
-			(function (d, t, g, defaultToken, baseUrl, debug, restrictedUrl, requiredToken) {
-			'use strict';
-			
-			// Set token in localStorage before widget-loader.js runs
-			// This allows widget-loader.js to find the token since it checks localStorage
-			// try {
-			// 	localStorage.setItem('surefeedback_api_token', defaultToken);
-			// 	localStorage.setItem('surefeedback_token_timestamp', Date.now().toString());
-			// } catch (e) {
-			// 	console.warn('SureFeedback: Could not set localStorage token:', e);
-			// }
-			
-			var sf = d.createElement(t),
-				s = d.getElementsByTagName(t)[0];
-			
-			sf.type = 'text/javascript';
-			sf.async = true;
-			sf.defer = true;
-			sf.charset = 'UTF-8';
-			sf.src = g + '?v=' + (new Date()).getTime();
-			sf.setAttribute('data-default-token', defaultToken);
-			sf.setAttribute('data-base-url', baseUrl);
-			sf.setAttribute('data-debug', debug || 'false');
-			sf.setAttribute('data-mode', 'iframe');
-			sf.setAttribute('data-platform', 'wordpress');
-			sf.setAttribute('data-site-url', window.location.href);
-			sf.setAttribute('data-site-origin', window.location.origin);
-			sf.setAttribute('data-site-domain', window.location.hostname);
-			
-			// Optional: Add restricted URL and required token if provided
-			if (restrictedUrl) {
-				sf.setAttribute('data-restricted-url', restrictedUrl);
-			}
-			if (requiredToken) {
-				sf.setAttribute('data-required-token', requiredToken);
-			}
-			
-			s.parentNode.insertBefore(sf, s);
-			console.log('SureFeedback: Token set in localStorage and script injected');
-			console.log('SureFeedback: Token:', defaultToken);
-			console.log('SureFeedback: Base URL:', baseUrl);
-			console.log('SureFeedback: Script src:', sf.src);
-			console.log('SureFeedback: LocalStorage token:', localStorage.getItem('surefeedback_api_token'));
-			
-			// Debug: Check URL parameters that widget-loader.js will look for
-			const urlParams = new URLSearchParams(window.location.search);
-			console.log('SureFeedback: URL Parameters Check:', {
-				api_token: urlParams.get('api_token'),
-				magic_token: urlParams.get('magic_token'), 
-				surefeedback_token: urlParams.get('surefeedback_token'),
-				current_url: window.location.href
-			});
-			
-			// Debug: Set up listener for widget ready event
-			window.addEventListener('surefeedback:ready', function() {
-				console.log('SureFeedback: Widget ready event fired - widget is fully loaded');
-			});
-			
-			// Debug: Check if widget loads after 3 seconds
-			setTimeout(function() {
-				console.log('SureFeedback: Status check after 3s:', {
-					iframe_ready: window.SureFeedbackIframeReady,
-					widget_loaded: window.SureFeedbackWidget ? 'yes' : 'no',
-					verification_data: window.SureFeedbackVerification || 'none'
-				});
-			}, 3000);
-			})(document, 'script', '<?php echo esc_js( $parent_url ); ?>/js/widget-loader.js', '<?php echo esc_js( $token ); ?>', '<?php echo esc_js( $parent_url ); ?>', 'true', null, null);
-			</script>
-			<!-- End SureFeedback Widget -->
-			<?php
-		}
-
-		/**
-		 * Trigger script injection immediately by making internal HTTP request
-		 * This forces wp_footer to run and inject the script right after webhook completes
-		 * 
-		 * @return void
-		 */
-		public function trigger_script_injection_immediately() {
-			// Get the site URL to make internal request
-			$site_url = home_url();
-			
-			// Log the attempt
-			error_log( 'SureFeedback: Triggering immediate script injection by requesting: ' . $site_url );
-			
-			// Make internal HTTP request to trigger wp_footer
-			$response = wp_remote_get( $site_url, array(
-				'timeout' => 30,
-				'blocking' => false, // Don't wait for response, just trigger the request
-				'headers' => array(
-					'User-Agent' => 'SureFeedback-Auto-Injection/1.0'
-				)
-			) );
-			
-			if ( is_wp_error( $response ) ) {
-				error_log( 'SureFeedback: Failed to trigger immediate script injection: ' . $response->get_error_message() );
-			} else {
-				error_log( 'SureFeedback: Successfully triggered immediate script injection request' );
-			}
-		}
-
-		/**
-		 * Auto-verify script with smart scheduling and retry limits
-		 * - Schedules verification every 1 minute
-		 * - Limits to 10 attempts maximum
-		 * - Switches to hourly updates after verification
-		 *
-		 * @return void
-		 */
-		public function auto_verify_script() {
-			// Reset attempt counter when starting new verification cycle
-			update_option( 'surefeedback_verification_attempts', 0 );
-			
-			// Schedule initial verification after a short delay
-			wp_schedule_single_event( time() + 1, 'surefeedback_auto_verify' );
-		}
-
-		/**
-		 * Perform automatic verification with smart retry logic
-		 * - Limits attempts to 10 maximum
-		 * - Schedules every 1 minute until verified or limit reached
-		 * - Switches to hourly updates after successful verification
-		 *
-		 * @return void
-		 */
-		public function perform_auto_verification() {
-			// Get current verification status and attempt count
-			$current_status = get_option( 'surefeedback_verification_status', 'pending' );
-			$attempts = intval( get_option( 'surefeedback_verification_attempts', 0 ) );
-			
-			// If already verified, schedule hourly update and exit
-			if ( $current_status === 'verified' ) {
-				// Clear any existing scheduled events
-				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
-				
-				// Schedule hourly verification update to keep database fresh
-				if ( ! wp_next_scheduled( 'surefeedback_hourly_verify' ) ) {
-					wp_schedule_event( time() + 3600, 'hourly', 'surefeedback_hourly_verify' );
-					error_log( 'SureFeedback: Scheduled hourly verification updates' );
-				}
-				return;
-			}
-			
-			// Check if we've exceeded maximum attempts (10)
-			if ( $attempts >= 10 ) {
-				error_log( 'SureFeedback: Maximum verification attempts (10) reached, stopping scheduled verification' );
-				update_option( 'surefeedback_verification_status', 'failed' );
-				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
-				return;
-			}
-			
-			// Increment attempt counter
-			$attempts++;
-			update_option( 'surefeedback_verification_attempts', $attempts );
-			error_log( "SureFeedback: Verification attempt {$attempts}/10" );
-			
-			// Perform verification
-			$verification_result = $this->verify_script_integration();
-			$verified = $verification_result['success'] && $verification_result['verified'];
-			
-			if ( $verified ) {
-				// Success! Update status and switch to hourly updates
-				update_option( 'surefeedback_verification_status', 'verified' );
-				error_log( "SureFeedback: Verification successful after {$attempts} attempts" );
-				
-				// Clear minute-based scheduling
-				wp_clear_scheduled_hook( 'surefeedback_auto_verify' );
-				
-				// Schedule hourly updates to keep database fresh
-				wp_schedule_event( time() + 3600, 'hourly', 'surefeedback_hourly_verify' );
-				error_log( 'SureFeedback: Switched to hourly verification updates' );
-			} else {
-				// Not yet verified, schedule next attempt in 1 minute
-				$status = $verification_result['status'] ?? 'unknown';
-				update_option( 'surefeedback_verification_status', 'pending' );
-				
-				if ( $attempts < 10 ) {
-					// Schedule next attempt in 1 minute
-					wp_schedule_single_event( time() + 60, 'surefeedback_auto_verify' );
-					error_log( "SureFeedback: Verification failed ({$status}), scheduling attempt " . ($attempts + 1) . "/10 in 1 minute" );
-				} else {
-					error_log( 'SureFeedback: Final verification attempt failed, stopping scheduled verification' );
-					update_option( 'surefeedback_verification_status', 'failed' );
-				}
-			}
-		}
-		
-		/**
-		 * Perform hourly verification update to keep database fresh
-		 * Called after initial verification succeeds
-		 *
-		 * @return void
-		 */
-		public function perform_hourly_verification_update() {
-			// Perform verification to get fresh data
-			$verification_result = $this->verify_script_integration();
-			$verified = $verification_result['success'] && $verification_result['verified'];
-			
-			if ( $verified ) {
-				update_option( 'surefeedback_verification_status', 'verified' );
-				error_log( 'SureFeedback: Hourly verification update - still verified' );
-			} else {
-				// Verification failed, switch back to retry mode
-				update_option( 'surefeedback_verification_status', 'pending' );
-				update_option( 'surefeedback_verification_attempts', 0 );
-				
-				// Cancel hourly updates and restart minute-based verification
-				wp_clear_scheduled_hook( 'surefeedback_hourly_verify' );
-				wp_schedule_single_event( time() + 60, 'surefeedback_auto_verify' );
-				
-				error_log( 'SureFeedback: Hourly verification failed, switching back to retry mode' );
-			}
-		}
-
-		/**
-		 * Verify script integration with SaaS platform
-		 * Uses the widget verification endpoint (no JWT auth required)
-		 * Follows the same flow as the SaaS dashboard
-		 *
-		 * @return array
-		 */
-		public function verify_script_integration() {
-			// Debug: Start logging
-			error_log( '=== SureFeedback Verification Debug Start ===' );
-			
-			$script_token = get_option( 'surefeedback_script_token' );
-			$site_token = get_option( 'surefeedback_api_key' ); // This is the site's API token (sf_*)
-			$parent_url = get_option( 'surefeedback_parent_url' );
-			
-			// Debug: Log configuration
-			error_log( 'Script Token: ' . ( $script_token ? substr( $script_token, 0, 10 ) . '...' : 'NOT SET' ) );
-			error_log( 'Site Token: ' . ( $site_token ? substr( $site_token, 0, 10 ) . '...' : 'NOT SET' ) );
-			error_log( 'Parent URL: ' . ( $parent_url ? $parent_url : 'NOT SET' ) );
-			
-			if ( ( ! $script_token && ! $site_token ) || ! $parent_url ) {
-				error_log( 'VERIFICATION FAILED: Missing script token or parent URL' );
-				error_log( '=== SureFeedback Verification Debug End ===' );
-				return array(
-					'success' => false,
-					'message' => 'Missing script token or parent URL',
-				);
-			}
-
-			// Use script_token if available, otherwise fall back to site_token
-			// Both should work since they're the same token in our WordPress integration
-			$token_to_use = $script_token ?: $site_token;
-			error_log( 'Token to use: ' . ( $token_to_use ? substr( $token_to_use, 0, 10 ) . '...' : 'NONE' ) );
-
-			// Call the widget verification endpoint (no JWT auth required)
-			// Same endpoint used by the SaaS dashboard polling
-			$api_base_url = $parent_url;
-			$verification_url = trailingslashit( $api_base_url ) . 'api/v1/admin/verify-integration?script_token=' . $token_to_use;
-			
-			error_log( 'API Base URL: ' . $api_base_url );
-			error_log( 'Verification URL: ' . $verification_url );
-			
-			$response = wp_remote_get( $verification_url, array(
-				'timeout' => 30,
-				'headers' => array(
-					'Content-Type' => 'application/json',
-					'User-Agent' => 'SureFeedback-WordPress-Plugin/1.0',
-					'Authorization' => 'Bearer ' . $token_to_use,
-				),
-			) );
-
-			if ( is_wp_error( $response ) ) {
-				$error_message = $response->get_error_message();
-				error_log( 'VERIFICATION FAILED: WP Error - ' . $error_message );
-				error_log( '=== SureFeedback Verification Debug End ===' );
-				return array(
-					'success' => false,
-					'message' => 'Failed to connect to verification service: ' . $error_message,
-				);
-			}
-
-			$response_code = wp_remote_retrieve_response_code( $response );
-			$response_body = wp_remote_retrieve_body( $response );
-			$response_headers = wp_remote_retrieve_headers( $response );
-			$data = json_decode( $response_body, true );
-			
-			// Debug: Log response details
-			error_log( 'Response Code: ' . $response_code );
-			error_log( 'Response Headers: ' . wp_json_encode( $response_headers ) );
-			error_log( 'Response Body: ' . $response_body );
-			error_log( 'Parsed Data: ' . wp_json_encode( $data ) );
-
-			// The widget verification endpoint returns 'integrated' instead of 'success'
-			// Same as SaaS dashboard IntegrationStep.tsx line 110-114
-			if ( $response_code === 200 && isset( $data['integrated'] ) && $data['integrated'] ) {
-				// Success
-				error_log( 'VERIFICATION SUCCESS: Script integration verified' );
-				
-				// Store verification result
-				update_option( 'surefeedback_last_verification', current_time( 'mysql' ) );
-				update_option( 'surefeedback_verification_status', 'verified' );
-				
-				// Extract verification details (same structure as SaaS dashboard)
-				$verification_data = $data['verification'] ?? array();
-				error_log( 'Verification data: ' . wp_json_encode( $verification_data ) );
-				error_log( '=== SureFeedback Verification Debug End ===' );
-				
-				return array(
-					'success' => true,
-					'verified' => true,
-					'message' => $data['message'] ?? 'Integration verified successfully',
-					'data' => $data,
-					'verification' => $verification_data,
-				);
-			}
-
-			// Handle specific error cases (same as SaaS dashboard)
-			if ( isset( $data['status'] ) ) {
-				$error_messages = array(
-					'SCRIPT_NOT_LOADED' => 'Script integration is valid but widget is not currently loaded on website',
-					'TOKEN_NOT_FOUND' => 'Invalid site token or site is inactive',
-					'INVALID_TOKEN_FORMAT' => 'Invalid token format',
-					'VERIFICATION_ERROR' => 'Failed to verify script integration',
-				);
-				
-				$message = $error_messages[ $data['status'] ] ?? ( $data['error'] ?? 'Verification failed' );
-				
-				$failure_reason = sprintf( 
-					'Status: %s, Message: %s', 
-					$data['status'], 
-					$message
-				);
-				error_log( 'VERIFICATION FAILED: ' . $failure_reason );
-				error_log( '=== SureFeedback Verification Debug End ===' );
-				
-				return array(
-					'success' => false,
-					'message' => $message,
-					'status' => $data['status'],
-					'data' => $data,
-				);
-			}
-
-			$failure_reason = sprintf( 
-				'Status: %d, Data: %s', 
-				$response_code, 
-				wp_json_encode( $data ) 
-			);
-			error_log( 'VERIFICATION FAILED: ' . $failure_reason );
-			error_log( '=== SureFeedback Verification Debug End ===' );
-
-			return array(
-				'success' => false,
-				'message' => isset( $data['error'] ) ? $data['error'] : 'Verification failed',
-				'data' => $data,
-			);
-		}
-
-
-		// Add custom js.
-		/**
-		 * Add custom inline script.
-		 *
-		 * @return void
-		 */
-		public function ph_custom_inline_script() {
-			$script_code = '
-			jQuery(document).ready(function($) {
-				$(".surefeedback-manual-connection").closest("tr").addClass("surefeedback-disable-row"); 
-				$(".surefeedback-help-link").closest("tr").addClass("surefeedback-disable-row"); 
-			});
-				 ';
-			wp_register_script( 'ph-custom-footer-script', '', array(), '', true );
-			wp_enqueue_script( 'ph-custom-footer-script' );
-			wp_add_inline_script( 'ph-custom-footer-script', $script_code );
-		}
-
-		/**
-		 * Add user data to the script.
-		 *
-		 * @return void
-		 */
-		public function ph_user_data() {
-
-			$current_user = wp_get_current_user();
-
-			$user_data = array(
-				'ID'            => $current_user->ID,
-				'user_login'    => $current_user->user_login,
-				'user_email'    => $current_user->user_email,
-				'display_name'  => $current_user->display_name,
-			);
-
-			?>
-			<script>
-				window.SureFeedback = <?php echo json_encode( $user_data ); ?>
-			</script>
-			<?php
-		}
-
-		/**
-		 * Feedback page - custom settings page content.
-		 * Now loads Vue.js admin interface
-		 *
-		 * @return void
-		 */
-		public function options_page() {
-			// Enqueue admin scripts and styles
-			$this->enqueue_admin_scripts();
-
-			// Set initial tab from URL
-			$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'general';
-			?>
-			<div id="surefeedback-admin-app"></div>
-			<script>
-				// Set initial tab from URL hash or query parameter
-				if (window.location.hash) {
-					window.location.hash = window.location.hash;
-				} else {
-					window.location.hash = '<?php echo esc_js( $active_tab ); ?>';
-				}
-			</script>
-			<?php
-		}
-
-		/**
-		 * Enqueue admin scripts and styles for Vue.js app
-		 *
-		 * @return void
-		 */
-		public function enqueue_admin_scripts() {
-			$screen = get_current_screen();
-			
-			// Only load on our settings pages
-			$allowed_screens = array(
-				'settings_page_feedback-connection-options',
-				'surefeedback_page_surefeedback#settings'
-			);
-			
-			if ( ! in_array( $screen->id, $allowed_screens, true ) ) {
-				return;
-			}
-
-			// Check if built assets exist
-			$js_file = SUREFEEDBACK_PLUGIN_DIR . 'assets/dist/admin.js';
-			$css_file = SUREFEEDBACK_PLUGIN_DIR . 'assets/dist/admin.css';
-
-			if ( file_exists( $js_file ) ) {
-				wp_enqueue_script(
-					'surefeedback-admin',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/dist/admin.js',
-					array(),
-					filemtime( $js_file ),
-					true
-				);
-				
-				// Add module type for ES6 imports
-				add_filter( 'script_loader_tag', array( $this, 'add_module_type_to_admin_script' ), 10, 3 );
-
-				// Localize script with WordPress data
-				wp_localize_script(
-					'surefeedback-admin',
-					'sureFeedbackAdmin',
-					array(
-						'rest_url'         => rest_url(),
-						'rest_nonce'       => wp_create_nonce( 'wp_rest' ),
-						'admin_url'        => admin_url(),
-						'ajax_url'         => admin_url( 'admin-ajax.php' ),
-						'plugin_url'       => SUREFEEDBACK_PLUGIN_URL,
-						'nonce'            => wp_create_nonce( 'surefeedback_admin_nonce' ),
-						'installer_nonce'  => wp_create_nonce( 'surefeedback_installer_nonce' ),
-						'disconnect_nonce' => wp_create_nonce( 'surefeedback-site-disconnect-nonce' ),
-						'showWhiteLabel'   => ! defined( 'PH_HIDE_WHITE_LABEL' ) || true !== PH_HIDE_WHITE_LABEL,
-						'verification_status' => get_option( 'surefeedback_verification_status', 'unverified' ),
-						'connection_status' => get_option( 'surefeedback_connection_status', 'not_connected' ),
-						'surerank_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surerank.svg',
-						'surecart_icon'    => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/surecart.svg',
-						'sureforms_icon'   => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/sureforms.svg',
-						'presto_player_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/pplayer.svg',
-						'suretriggers_icon' => SUREFEEDBACK_PLUGIN_URL . 'assets/images/settings/OttoKit-Symbol-Primary.svg',
-					)
-				);
-			}
-
-			if ( file_exists( $css_file ) ) {
-				wp_enqueue_style(
-					'surefeedback-admin',
-					SUREFEEDBACK_PLUGIN_URL . 'assets/dist/admin.css',
-					array(),
-					filemtime( $css_file )
-				);
-			}
-
-			// Enqueue WordPress admin styles that we depend on
-			wp_enqueue_style( 'common' );
-			wp_enqueue_style( 'forms' );
-			
-			// Enqueue dashicons for icons
-			wp_enqueue_style( 'dashicons' );
-		}
-
-		/**
-		 * Check if valid cookie is available.
-		 *
-		 * @return bool
-		 */
-		public function has_valid_cookie() {
-			$token = get_option( 'surefeedback_access_token', '' );
-			if ( ! $token ) {
-				return false;
-			}
-
-			// get token from url.
-			$url_token = isset( $_GET['ph_access_token'] ) ? sanitize_text_field( $_GET['ph_access_token'] ) : '';
-
-			if ( ! $url_token ) {
-				if ( isset( $_COOKIE['ph_access_token'] ) ) {
-					$url_token = $_COOKIE['ph_access_token'];
-				}
-			}
-
-			return $url_token === $token;
-		}
-
-		/**
-		 * Outputs the saved website script
-		 * Along with and identify method to sync accounts
-		 *
-		 * @return void
-		 */
-		public function script() {
-			static $loaded;
-
-			// make sure we only load once.
-			if ( $loaded ) {
-				return;
-			}
-
-			if ( ! apply_filters( 'ph_script_should_start_loading', true ) ) {
-				return;
-			}
-
-			// settings must be set.
-			$url = get_option( 'surefeedback_parent_url' );
-			if ( ! $url ) {
-				echo '<!-- SureFeedback: parent url not set -->';
-				return;
-			}
-			$id = get_option( 'surefeedback_id' );
-			if ( ! $id ) {
-				echo '<!-- SureFeedback: project id not set -->';
-				return;
-			}
-
-			$allowed = false;
-			$allowed = surefeedback_is_current_user_allowed_to_comment() || $this->has_valid_cookie();
-
-			// always have project and public api key.
-			$args = array(
-				'p'         => (int) $id,
-				'ph_apikey' => get_option( 'surefeedback_api_key', '' ),
-			);
-
-			// auto-add access token and signature if current user is allowed to comment.
-			if ( $allowed ) {
-				$args['ph_access_token'] = get_option( 'surefeedback_access_token', '' );
-				$args['ph_signature']    = hash_hmac( 'sha256', 'guest', get_option( 'surefeedback_signature', false ) );
-				// if user is logged in, add name and email data.
-				if ( is_user_logged_in() ) {
-					$user                  = wp_get_current_user();
-					$args['ph_user_name']  = urlencode( $user->display_name );
-					$args['ph_user_email'] = sanitize_email( str_replace( '+', '%2B', $user->user_email ) );
-					$args['ph_signature']  = hash_hmac( 'sha256', sanitize_email( $user->user_email ), get_option( 'surefeedback_signature', false ) );
-					$args['ph_query_vars'] = filter_var( get_option( 'surefeedback_admin', false ), FILTER_VALIDATE_BOOLEAN );
-				}
-			}
-
-			$url = add_query_arg( $args, $url );
-
-			// remove protocol for ssl and non ssl.
-			$url = preg_replace( '(^https?://)', '', $url );
-
-			// we've loaded.
-			$loaded = true;
-			?>
-
-			<script>
-				(function(d, t, g, k) {
-					var ph = d.createElement(t),
-						s = d.getElementsByTagName(t)[0],
-						l = <?php echo $allowed ? 'true' : 'false'; ?>,
-						t = (new URLSearchParams(window.location.search)).get(k);
-					t && localStorage.setItem(k, t);
-					t = localStorage.getItem(k)
-					if (!l && !t) return;
-					ph.type = 'text/javascript';
-					ph.async = true;
-					ph.defer = true;
-					ph.charset = 'UTF-8';
-					ph.src = g + '&v=' + (new Date()).getTime();
-					ph.src += t ? '&' + k + '=' + t : '';
-					s.parentNode.insertBefore(ph, s);
-				})(document, 'script', '<?php echo esc_url_raw( "//$url" ); ?>', 'ph_access_token');
-			</script>
-			<?php
-		}
-
-		/**
-		 * AJAX handler for plugin installation
-		 *
-		 * @return void
-		 */
-		public function ajax_install_plugin() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['_ajax_nonce'], 'surefeedback_installer_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'install_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to install plugins.' );
-			}
-
-			$slug = sanitize_text_field( $_POST['slug'] );
-			
-			include_once ABSPATH . 'wp-admin/includes/plugin-install.php';
-			include_once ABSPATH . 'wp-admin/includes/file.php';
-			include_once ABSPATH . 'wp-admin/includes/misc.php';
-			include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-
-			$api = plugins_api( 'plugin_information', array( 'slug' => $slug ) );
-
-			if ( is_wp_error( $api ) ) {
-				wp_send_json_error( array( 'message' => 'Plugin not found' ) );
-				return;
-			}
-
-			$upgrader = new Plugin_Upgrader( new WP_Ajax_Upgrader_Skin() );
-			$result = $upgrader->install( $api->download_link );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-			} else {
-				// Activate plugin after installation
-				$plugin_file = $upgrader->plugin_info();
-				if ( $plugin_file ) {
-					$activate_result = activate_plugin( $plugin_file );
-					if ( is_wp_error( $activate_result ) ) {
-						wp_send_json_success( array( 
-							'message' => 'Plugin installed but activation failed',
-							'errorCode' => 'activation_failed'
-						) );
-					} else {
-						wp_send_json_success( array( 'message' => 'Plugin installed and activated successfully' ) );
-					}
-				} else {
-					wp_send_json_success( array( 'message' => 'Plugin installed successfully' ) );
-				}
-			}
-		}
-
-		/**
-		 * AJAX handler for plugin activation
-		 *
-		 * @return void
-		 */
-		public function ajax_activate_plugin() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'activate_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to activate plugins.' );
-			}
-
-			$plugin = sanitize_text_field( $_POST['plugin'] );
-			
-			$result = activate_plugin( $plugin );
-
-			if ( is_wp_error( $result ) ) {
-				wp_send_json_error( array( 'message' => $result->get_error_message() ) );
-			} else {
-				wp_send_json_success( array( 'message' => 'Plugin activated successfully' ) );
-			}
-		}
-
-		/**
-		 * AJAX handler to get plugin status
-		 *
-		 * @return void
-		 */
-		public function ajax_get_plugin_status() {
-			// Check nonce for security
-			if ( ! wp_verify_nonce( $_POST['nonce'], 'surefeedback_admin_nonce' ) ) {
-				wp_die( 'Security check failed' );
-			}
-
-			// Check user capabilities
-			if ( ! current_user_can( 'activate_plugins' ) ) {
-				wp_die( 'You do not have sufficient permissions to check plugin status.' );
-			}
-
-			// Include required WordPress files
-			if ( ! function_exists( 'get_plugins' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
-			}
-
-			$plugin_list = array(
-				'surerank/surerank.php',
-				'surecart/surecart.php', 
-				'sureforms/sureforms.php',
-				'presto-player/presto-player.php',
-				'suretriggers/suretriggers.php'
-			);
-
-			$status_map = array();
-			$installed_plugins = get_plugins();
-
-			foreach ( $plugin_list as $plugin ) {
-				if ( ! isset( $installed_plugins[ $plugin ] ) ) {
-					$status_map[ $plugin ] = 'Install';
-				} elseif ( is_plugin_active( $plugin ) ) {
-					$status_map[ $plugin ] = 'Activated';
-				} else {
-					$status_map[ $plugin ] = 'Installed';
-				}
-			}
-
-			wp_send_json_success( $status_map );
-		}
-
-		/**
-		 * Register webhook endpoint for SureFeedback backend
-		 */
-		public function register_webhook_endpoint() {
-			register_rest_route('surefeedback/v1', '/webhook', array(
-				'methods' => 'POST',
-				'callback' => array($this, 'handle_webhook_callback'),
-				'permission_callback' => array($this, 'verify_webhook_permission'),
-			));
-		}
-
-		/**
-		 * Verify webhook permission - basic security check
-		 */
-		public function verify_webhook_permission($request) {
-			// For now, allow all requests - can add more security later
-			return true;
-		}
-
-		/**
-		 * Handle webhook callback from SureFeedback backend
-		 * This processes the same data that was previously sent via URL parameters
-		 */
-		public function handle_webhook_callback($request) {
-			$params = $request->get_params();
-			
-			// Log webhook received for debugging
-			error_log('SureFeedback: Webhook endpoint called with params: ' . print_r($params, true));
-			
-			// Validate required parameters
-			if (empty($params['success']) || empty($params['site_token'])) {
-				error_log('SureFeedback: Webhook validation failed - missing required parameters');
-				return new WP_Error('missing_params', 'Missing required parameters', array('status' => 400));
-			}
-
-			if ($params['success'] === '1') {
-				// Connection successful - save the connection data
-				$site_token = sanitize_text_field($params['site_token']);
-				$script_token = sanitize_text_field($params['script_token'] ?? $site_token);
-				$site_id = sanitize_text_field($params['site_id'] ?? '');
-				$organization_id = sanitize_text_field($params['organization_id'] ?? '');
-				$site_name = sanitize_text_field($params['site_name'] ?? '');
-				$domain = sanitize_text_field($params['domain'] ?? '');
-				$integration_script = $params['integration_script'] ?? '';
-				$script_instructions = $params['script_instructions'] ?? '';
-				$user_token = sanitize_text_field($params['user_token'] ?? '');
-
-				// Update options with the connection data
-				update_option('surefeedback_site_token', $site_token);
-				update_option('surefeedback_script_token', $script_token);
-				update_option('surefeedback_id', $site_id); // Match what script injection expects
-				update_option('surefeedback_site_id', $site_id); // Keep for compatibility
-				update_option('surefeedback_organization_id', $organization_id);
-				update_option('surefeedback_site_name', $site_name);
-				update_option('surefeedback_domain', $domain);
-				update_option('surefeedback_integration_script', $integration_script);
-				update_option('surefeedback_script_instructions', $script_instructions);
-				update_option('surefeedback_user_token', $user_token);
-				update_option('surefeedback_connection_status', 'connected');
-				update_option('surefeedback_widget_enabled', true);
-				
-				// Add required options for script injection
-				update_option('surefeedback_access_token', $site_token); // Use site_token as access_token
-				update_option('surefeedback_parent_url', 'http://localhost:8000'); // SaaS backend URL
-
-				// Log successful connection with saved options for debugging
-				error_log('SureFeedback: Webhook received - site connected successfully');
-				error_log('SureFeedback: Saved options - site_id: ' . $site_id . ', script_token: ' . $script_token);
-				
-				// Trigger immediate script injection by making internal HTTP request
-				// This forces wp_footer to run right after webhook completes
-				$this->trigger_script_injection_immediately();
-
-				$this->auto_verify_script();
-				
-				// Trigger the connection updated action for any other listeners
-				do_action('surefeedback_connection_updated');
-
-				return rest_ensure_response(array(
-					'success' => true,
-					'message' => 'Connection data saved successfully',
-				));
-			} else {
-				// Connection failed
-				error_log('SureFeedback: Webhook received - connection failed');
-				
-				return rest_ensure_response(array(
-					'success' => false,
-					'message' => 'Connection failed',
-				));
-			}
+	/**
+	 * Auto-verify script with smart scheduling and retry limits
+	 * Delegates to SaaS_Client
+	 *
+	 * @return void
+	 */
+	public function auto_verify_script() {
+		if ( $this->saas_client ) {
+			$this->saas_client->auto_verify_script();
 		}
 	}
 
-	// Initialize the plugin loader
-	SureFeedback_Loader::get_instance();
-	
-	SureFeedback::get_instance();
-endif;
+	/**
+	 * Perform automatic verification with smart retry logic
+	 * Delegates to SaaS_Client
+	 *
+	 * @return void
+	 */
+	public function perform_auto_verification() {
+		error_log('SureFeedback: Main plugin perform_auto_verification() called');
+		if ( $this->saas_client ) {
+			error_log('SureFeedback: SaaS client exists, delegating to perform_auto_verification()');
+			$this->saas_client->perform_auto_verification();
+		} else {
+			error_log('SureFeedback: ERROR - SaaS client not initialized!');
+		}
+	}
+
+	/**
+	 * Perform hourly verification update to keep database fresh
+	 * Delegates to SaaS_Client
+	 *
+	 * @return void
+	 */
+	public function perform_hourly_verification_update() {
+		if ( $this->saas_client ) {
+			$this->saas_client->perform_hourly_verification_update();
+		}
+	}
+
+	/**
+	 * Verify script integration with SaaS platform
+	 * Delegates to SaaS_Client
+	 *
+	 * @return array
+	 */
+	public function verify_script_integration() {
+		error_log('SureFeedback: Main plugin verify_script_integration() called');
+		if ( $this->saas_client ) {
+			error_log('SureFeedback: SaaS client exists, calling verify_script_integration()');
+			$result = $this->saas_client->verify_script_integration();
+			error_log('SureFeedback: Verification result: ' . print_r($result, true));
+			return $result;
+		}
+		error_log('SureFeedback: ERROR - SaaS client not initialized in verify_script_integration()');
+		return array(
+			'success' => false,
+			'message' => 'SaaS client not initialized',
+		);
+	}
+}
+
+// Initialize the plugin
+SureFeedback::get_instance();

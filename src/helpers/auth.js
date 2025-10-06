@@ -39,11 +39,8 @@ export const authenticateRedirect = () => {
   sessionStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
   localStorage.setItem('surefeedback_connection_intent', JSON.stringify(connectionIntent));
   
-  console.log('Redirecting to:', connectUrl);
-  console.log('Connection intent stored:', connectionIntent);
-  
   // Redirect to parent site for authentication
-  window.open(connectUrl, '_self');
+  window.open(connectUrl, '_blank');
 };
 
 export const reconnectSite = () => {
@@ -87,7 +84,7 @@ export const reconnectSite = () => {
   console.log('Reconnection intent stored:', connectionIntent);
   
   // Redirect to SaaS platform for reconnection
-  window.open(reconnectUrl, '_self');
+  window.open(reconnectUrl, '_blank');
 };
 
 export const disconnectSite = async () => {

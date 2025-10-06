@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "@bsf/force-ui";
+import { Button, Dialog } from "@bsf/force-ui";
 import { __ } from "@wordpress/i18n";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { disconnectSite } from "../helpers/auth";
@@ -8,17 +8,15 @@ const Connected = () => {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [disconnectStatus, setDisconnectStatus] = useState(null); // null, 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleDisconnect = async () => {
+  const handleDisconnectClick = () => {
     if (isDisconnecting) return;
+    setIsDialogOpen(true);
+  };
 
-    // Show confirmation dialog
-    const confirmed = confirm(
-      __("Are you sure you want to disconnect this site from SureFeedback? This will deactivate the widget and clear all connection data.", "surefeedback")
-    );
-
-    if (!confirmed) return;
-
+  const confirmDisconnect = async () => {
+    setIsDialogOpen(false);
     setIsDisconnecting(true);
     setDisconnectStatus(null);
     setErrorMessage('');
@@ -31,7 +29,7 @@ const Connected = () => {
         
         // Redirect to main admin page after short delay
         setTimeout(() => {
-          window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback&disconnected=1`;
+          window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback&disconnected=1#connection`;
         }, 2000);
       } else {
         setDisconnectStatus('error');
@@ -47,18 +45,19 @@ const Connected = () => {
   };
 
   const handleGoToDashboard = () => {
-    window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback`;
+    const appUrl = window.sureFeedbackAdmin?.connection?.app_url || 'http://localhost:3000';
+    window.open(`${appUrl}/sites`, '_blank');
   };
 
   return (
     <div className="flex justify-center items-start min-h-screen">
       <div className="bg-white shadow-md rounded-2xl p-8 max-w-lg w-full text-center">
-        <div className="text-3xl mb-3">🎉</div>
+        <div className="text-2xl mb-1">🎉</div>
         <div className="flex flex-col items-center justify-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-xl font-semibold m-0 text-gray-800">
             {__("Website Connected Successfully!", "surefeedback")}
           </h2>
-          <p className="text-gray-500 mb-6 text-sm w-80 text-center flex items-center">
+          <p className="text-gray-500 mb-3 text-sm w-80 text-center flex items-center">
             {__(
               "Your site is now linked with SureFeedback. Start gathering client feedback without friction.",
               "surefeedback"
@@ -66,7 +65,21 @@ const Connected = () => {
           </p>
         </div>
 
-        <div className="border rounded-lg mb-6 px-4 py-3 flex items-center justify-center">
+        <div 
+          className="rounded-lg mb-6 px-4 py-3 mx-auto flex items-center text-center w-full justify-center" 
+          style={{
+            border: '2px solid #E5E7EB',
+            paddingTop: '20px',
+            paddingBottom: '20px',
+            width: '340px',
+            // marginRights: '10px',
+            // marginTop: '16px',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }}
+        >
           <div className="grid grid-cols-2 gap-y-3 text-left">
             <span className="font-medium">Connection Site:</span>
             <span className="text-gray-700">https://example.com</span>
@@ -102,13 +115,27 @@ const Connected = () => {
         )}
 
         <div className="flex justify-center gap-4">
-          <Button variant="primary" onClick={handleGoToDashboard}>
+          <Button variant="ghost"  style={{
+            border: '2px solid #D1D5DB',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }} 
+          onClick={handleGoToDashboard}>
             {__("Go to Dashboard", "surefeedback")}
           </Button>
           <Button
-            variant="destructive"
-            className="!bg-red-50 !text-red-600 !border !border-red-300 hover:!bg-red-100"
-            onClick={handleDisconnect}
+            variant="ghost"
+            style={{
+            border: '2px solid #D62626',
+            cursor: 'pointer',
+            borderRadius: '10px',
+            outline: 'none',
+            boxShadow: 'none',
+          }} 
+            className="!bg-white !text-red-600 !border rounded-lg !border-red-600 hover:!bg-red-100"
+            onClick={handleDisconnectClick}
             disabled={isDisconnecting}
           >
             {isDisconnecting ? (
@@ -122,6 +149,37 @@ const Connected = () => {
           </Button>
         </div>
       </div>
+      
+      <Dialog
+        design="simple"
+        open={isDialogOpen}
+        setOpen={setIsDialogOpen}
+      >
+        <Dialog.Backdrop />
+        <Dialog.Panel>
+          <Dialog.Header>
+            <div className="flex items-center justify-between">
+              <Dialog.Title>
+                {__("Disconnect Site", "surefeedback")}
+              </Dialog.Title>
+            </div>
+            <Dialog.Description>
+              {__("Are you sure you want to disconnect this site from SureFeedback? This will deactivate the widget and clear all connection data.", "surefeedback")}
+            </Dialog.Description>
+          </Dialog.Header>
+          <Dialog.Footer>
+            <Button onClick={confirmDisconnect}>
+              {__("Yes, Disconnect", "surefeedback")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              {__("Cancel", "surefeedback")}
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Panel>
+      </Dialog>
     </div>
   );
 };
