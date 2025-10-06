@@ -1,32 +1,44 @@
-import React from 'react';
+import React from "react";
+import { Frown, ChevronRight } from "lucide-react";
+import { Button } from "@bsf/force-ui";
+import { __ } from "@wordpress/i18n";
+import { reconnectSite } from "../helpers/auth";
 
 const ConnectionFailed = () => {
   const handleConnectAgain = () => {
-    // Add connect again logic here
-    console.log('Connect again clicked');
+    // Trigger reconnection flow
+    reconnectSite();
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-96 p-10 text-center font-sans">
-      <div className="text-5xl mb-6 text-red-500">
-        ☹️
+    <div className="flex justify-center items-start min-h-screen">
+      <div className="bg-white shadow-md rounded-2xl p-8 text-center max-w-md w-full">
+        <Frown className="mx-auto text-red-500 w-8 h-8 mb-1" />
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">
+          {__("Connection Failed...", "")}
+        </h2>
+        <div className="flex items-center justify-center">
+          <p className="text-gray-500 mb-6">
+            {__(
+              'We couldn’t connect your site. Please try again.',
+              ""
+            )}
+          </p>
+        </div>
+        <div className="flex items-center justify-center">
+          <Button
+            variant="primary"
+            icon={<ChevronRight />}
+            iconPosition="right"
+            size="md"
+            onClick={() => handleConnectAgain()}
+            className="px-8"
+            style={{ borderRadius: "0.5rem" }}
+          >
+            {__("Connect Again", "")}
+          </Button>
+        </div>
       </div>
-      
-      <h2 className="text-3xl font-semibold text-gray-800 mb-3 m-0">
-        Connection Failed...
-      </h2>
-      
-      <p className="text-base text-gray-500 mb-8 m-0 max-w-sm leading-relaxed">
-        We couldn't connect your site. Please try again.
-      </p>
-      
-      <button
-        onClick={handleConnectAgain}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg border-none text-base font-medium cursor-pointer flex items-center gap-2 transition-colors duration-200"
-      >
-        Connect Again
-        <span className="text-sm">→</span>
-      </button>
     </div>
   );
 };
