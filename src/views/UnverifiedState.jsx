@@ -8,7 +8,8 @@ const UnverifiedState = () => {
   const handleAction = () => {
     if (verificationStatus === 'pending') {
       // Go to dashboard
-      window.location.href = `${window.origin}/wp-admin/admin.php?page=surefeedback`;
+      const appUrl = window.sureFeedbackAdmin?.connection?.app_url || 'http://localhost:3000';
+      window.open(`${appUrl}/sites`, '_blank');
     } else if (verificationStatus === 'failed') {
       // Reconnect
       window.location.reload();
